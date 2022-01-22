@@ -59,7 +59,7 @@ $(document).ready(function() {
 });
 </script>
 <!-- header -->
-<div class="pHeader"><?php print _('SAML2 connection settings'); ?></div>
+<div class="pHeader"><?php print _('SAML2 connection settings').$User->print_doc_link('Authentication/SAML2.md'); ?></div>
 
 <!-- content -->
 <div class="pContent">
@@ -83,6 +83,15 @@ $(document).ready(function() {
 	</tr>
 
 	<!-- Advanced Settings -->
+	<tr>
+		<td><?php print _('Enable JIT'); ?></td>
+		<td>
+			<input type="checkbox" class="input-switch" value="1" name="jit" <?php if(@$method_settings->params->jit == 1) print 'checked'; ?>  <?php print $is_disabled; ?> >
+		</td>
+		<td class="info2">
+			<?php print _('Provision new users automatically'); ?><br>
+		</td>
+	</tr>
 	<tr>
 		<td><?php print _('Use advanced settings'); ?></td>
 		<td>

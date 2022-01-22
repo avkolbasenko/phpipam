@@ -98,8 +98,8 @@ $phpsessname = "phpipam";
 /**
  * Cookie SameSite settings ("None", "Lax"=Default, "Strict")
  * - "Strict" increases security
- * - "Lax" required for SAML2
- * - "None" requires HTTPS
+ * - "Lax" required for SAML2, some SAML topologies may require "None".
+ * - "None" requires HTTPS (implies "Secure;")
  */
 $cookie_samesite = "Lax";
 
@@ -146,6 +146,8 @@ $proxy_port     = '8080';                                 // Proxy server port
 $proxy_user     = 'USERNAME';                             // Proxy Username
 $proxy_pass     = 'PASSWORD';                             // Proxy Password
 $proxy_use_auth = false;                                  // Enable/Disable Proxy authentication
+
+$offline_mode   = false;                                  // Offline mode, disable server-side Internet requests (proxy/OpenStreetMap)
 
 /**
  * Failed access

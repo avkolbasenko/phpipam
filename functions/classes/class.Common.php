@@ -164,8 +164,8 @@ class Common_functions  {
 	 * @return int
 	 */
 	public function cmp_version_strings($verA, $verB) {
-		$a = explode('.', $verA);
-		$b = explode('.', $verB);
+		$a = array_pad(explode('.', $verA), 3, 0);
+		$b = array_pad(explode('.', $verB), 3, 0);
 
 		if ($a[0] != $b[0]) return $a[0] < $b[0] ? -1 : 1;			// 1.x.y is less than 2.x.y
 		if (strcmp($a[1], $b[1]) != 0) return strcmp($a[1], $b[1]);	// 1.21.y is less than 1.3.y
@@ -173,6 +173,20 @@ class Common_functions  {
 		return 0;
 	}
 
+	/**
+	 * Fetch mysql version info
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public function fetch_mysql_version () {
+		# fetch
+		try { $result = $this->Database->getObjectQuery("SELECT VERSION() AS 'version';"); }
+		catch (Exception $e) {
+			return "";
+		}
+		return is_object($result) ? $result->version : "";
+	}
 
 
 
@@ -423,6 +437,14 @@ class Common_functions  {
 		if (!is_object($settings))
 			return false;
 
+		// Escape ' & " charaters
+		if (property_exists($settings, 'siteTitle'))
+			$settings->siteTitle = escape_input($settings->siteTitle);
+
+		// default dbversion for older releases
+		if (!property_exists($settings, 'dbversion'))
+			$settings->dbversion = 0;
+
 		#save
 		$this->settings = $settings;
 
@@ -648,8 +670,7 @@ class Common_functions  {
 
 		try {
 			$dom = new \DOMDocument();
-
-			if ($dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOBLANKS | LIBXML_NOWARNING | LIBXML_NOERROR) === false)
+			if ($dom->loadHTML("<html>".$html."</html>", LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOBLANKS | LIBXML_NOWARNING | LIBXML_NOERROR) === false)
 				return "";
 
 			$banned_elements = ['script', 'iframe', 'embed'];
@@ -679,7 +700,7 @@ class Common_functions  {
 					$e->parentNode->removeChild($e);
 
 				// Return sanitised HTML
-				$html = $dom->saveHTML();
+				$html = str_replace(['<html>', '</html>'], '', $dom->saveHTML());
 			}
 		} catch (Exception $e) {
 			$html = "";
@@ -1402,6 +1423,11 @@ class Common_functions  {
 	public function curl_fetch_url($url, $headers=false, $timeout=30) {
 		$result = ['result'=>false, 'result_code'=>503, 'error_msg'=>''];
 
+		if (Config::ValueOf('offline_mode')) {
+			$result['error_msg'] = _('Internet access disabled in config.php');
+			return $result;
+		}
+
 		try {
 			$curl = curl_init();
 			curl_setopt($curl, CURLOPT_URL, $url);
@@ -1996,11 +2022,20 @@ class Common_functions  {
     				print "	<li><a href='".create_link("tools",$req['section'],$parent[0])."'><i class='icon-folder-open icon-gray'></i> $prefix->name</a> <span class='divider'></span></li>";
     			}
 
-		    }
-		    $prefix = $this->fetch_object("pstnPrefixes", "id", $req['subnetId']);
-		    print "	<li class='active'>$prefix->name</li>";
+		    	$prefix = $this->fetch_object("pstnPrefixes", "id", $req['subnetId']);
+		    	print "	<li class='active'>$prefix->name</li>";
+			}
 		}
 		print "</ul>";
+	}
+
+	/**
+	 * Print documentation link
+	 *
+	 * @param   string $doc  document path/file
+	 */
+	public function print_doc_link($doc) {
+		print "<a style='float:right' target=_ href='".create_link("tools/documentation/$doc")."'>"._("Documentation")." <i class='fa fa-book'></i></a>";
 	}
 
 	/**
