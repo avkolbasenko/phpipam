@@ -32,9 +32,9 @@ $now     = time();
 $nowdate = date ("Y-m-d H:i:s");
 $beforetime = date ("Y-m-d H:i:s", (time()-$config['removed_addresses_timelimit']));
 
-// set query to fetch addresses and belongign subnets
+// set query to fetch addresses and belonging subnets
 $query = "select
-			`ip`.`id`,`ip`.`ip_addr`,`ip`.`lastSeen`,`ip`.`subnetId`,`ip`.`description`,`ip`.`hostname`,`ip`.`lastSeen`,
+			`ip`.`id`,`ip`.`ip_addr`,`ip`.`lastSeen`,`ip`.`subnetId`,`ip`.`description`,`ip`.`hostname`,
 			`su`.`subnet`,`su`.`mask`,`su`.`sectionId`,`su`.`description`,
 			'delete' as `action`
 		 from
@@ -116,9 +116,9 @@ if(sizeof($removed_addresses)>0 && $config['removed_addresses_send_mail']) {
 			$subnet = $Subnets->fetch_subnet(null, $change['subnetId']);
 
 	        // desc
-			$change['description'] = strlen($change['description'])>0 ? "$Subnets->mail_font_style $change[description]</font>" : "$Subnets->mail_font_style / </font>";
+			$change['description'] = !is_blank($change['description']) ? "$Subnets->mail_font_style $change[description]</font>" : "$Subnets->mail_font_style / </font>";
 			// subnet desc
-			$subnet->description = strlen($subnet->description)>0 ? "$Subnets->mail_font_style $subnet->description</font>" : "$Subnets->mail_font_style / </font>";
+			$subnet->description = !is_blank($subnet->description) ? "$Subnets->mail_font_style $subnet->description</font>" : "$Subnets->mail_font_style / </font>";
 
 			//content
 			$content[] = "<tr>";

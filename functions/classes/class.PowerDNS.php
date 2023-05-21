@@ -77,7 +77,7 @@ class PowerDNS extends Common_functions {
     /**
      * ttl value
      *
-     * @var int|string
+     * @var object
      * @access public
      */
     public $ttl;
@@ -167,7 +167,7 @@ class PowerDNS extends Common_functions {
      */
     private function db_set () {
         // decode values form powerDNS
-        $this->db_settings = strlen($this->settings->powerDNS)>10 ? json_decode($this->settings->powerDNS) : json_decode($this->db_set_db_settings ());
+        $this->db_settings = strlen($this->settings->powerDNS)>10 ? pf_json_decode($this->settings->powerDNS) : pf_json_decode($this->db_set_db_settings ());
         // set connection
         $this->Database_pdns = new Database_PDO ($this->db_settings->username, $this->db_settings->password, $this->db_settings->host, $this->db_settings->port, $this->db_settings->name);
     }
@@ -716,7 +716,7 @@ class PowerDNS extends Common_functions {
      * @param mixed $value (default: null)
      * @param string $sortField (default: 'id')
      * @param bool $sortAsc (default: true)
-     * @return void
+     * @return array|false
      */
     public function search_records ($field = "content", $value = null, $sortField = 'id', $sortAsc = true) {
         // fetch
@@ -984,7 +984,7 @@ class PowerDNS extends Common_functions {
         else                        { $soa = $soa[0]; }
 
         // update serial it not autoserial
-        $soa_serial = explode(" ", $soa->content);
+        $soa_serial = pf_explode(" ", $soa->content);
         $soa_serial[2] = $this->db_settings->autoserial=="Yes" ? 0 : (int) $soa_serial[2]+1;
 
         // if serail set override it
@@ -1039,7 +1039,7 @@ class PowerDNS extends Common_functions {
 
         // content
         $soa   = array();
-        $soa[] = array_shift(explode(";", $values['ns']));
+        $soa[] = array_shift(pf_explode(";", $values['ns']));
         $soa[] = str_replace ("@", ".", $values['hostmaster']);
         $soa[] = $this->set_default_change_date ();
         $soa[] = $this->validate_refresh ($values['refresh']);
@@ -1051,7 +1051,7 @@ class PowerDNS extends Common_functions {
         $records[] = $this->formulate_new_record ($this->lastId, $values['name'], "SOA", implode(" ", $soa), $values['ttl'], null, 0, $checkOnly);
 
         // formulate NS records
-        $ns = explode(";", $values['ns']);
+        $ns = pf_explode(";", $values['ns']);
         if (sizeof($ns)>0) {
             foreach($ns as $s) {
                 // validate
@@ -1203,7 +1203,7 @@ class PowerDNS extends Common_functions {
         }
 
         // for all other record types null is ok, otherwise URI is required
-        if (strlen($name)>0 && !$this->validate_hostname($name)){ $this->Result->show("danger", _("Invalid record name"), true); }
+        if (!is_blank($name) && !$this->validate_hostname($name)){ $this->Result->show("danger", _("Invalid record name"), true); }
         // ok
         return $name;
     }
@@ -1287,7 +1287,7 @@ class PowerDNS extends Common_functions {
      */
     private function validate_prio ($prio) {
         // validate numbric
-        if(!is_null($prio) && strlen($prio)>0) {
+        if(!is_null($prio) && !is_blank($prio)) {
             if(!is_numeric($prio))                        { $this->Result->show("danger", _("Invalid priority value"), true); }
             // range
             if(0 > $prio || $prio > 1000)                 { $this->Result->show("danger", _("Priority range is from 0 to 1000"), true); }
@@ -1305,7 +1305,7 @@ class PowerDNS extends Common_functions {
      */
     private function validate_integer ($int) {
         // validate numbric
-        if(strlen($int)>0 && !is_null($int) && $int!==false) {
+        if(!is_blank($int) && !is_null($int) && $int!==false) {
             if(!is_numeric($int))                        { $this->Result->show("danger", _("Invalid integer value"), true); }
         }
         // ok
@@ -1422,7 +1422,7 @@ class PowerDNS extends Common_functions {
         $bits = $mask<24 ? 2 : 1;
 
         // to array
-        $zone = explode(".", $ip);
+        $zone = pf_explode(".", $ip);
 
         // create name
         if ($bits==1)    { return $zone[2].".".$zone[1].".".$zone[0].".in-addr.arpa"; }
@@ -1466,7 +1466,7 @@ class PowerDNS extends Common_functions {
         // set zone prefix and reverse content
         if ($this->identify_address ($ip)=="IPv4") {
             $prefix = ".in-addr.arpa";
-            $zone = array_reverse(explode(".", $ip));
+            $zone = array_reverse(pf_explode(".", $ip));
         }
         else {
             // PEAR for IPv6
@@ -1476,7 +1476,7 @@ class PowerDNS extends Common_functions {
             $ip = $this->Net_IPv6->removeNetmaskSpec($ip);
 
             // to array
-            $ip = explode(":", $ip);
+            $ip = pf_explode(":", $ip);
 
             // if 0 than add 4 nulls
             foreach ($ip as $k=>$i) {

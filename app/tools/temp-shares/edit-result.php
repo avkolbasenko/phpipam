@@ -25,9 +25,9 @@ if(strlen($_POST['code'])!=32) 										{ $Result->show("danger", _("Invalid co
 if($_POST['validity']<date("Y-m-d H:i:s"))							{ $Result->show("danger", _("Invalid date"), true); }
 if($_POST['validity']>date("Y-m-d H:i:s", strtotime("+ 7 days")))	{ $Result->show("danger", _("1 week is max validity time"), true); }
 # verify each recipient
-if(strlen($_POST['email'])>0) {
-	foreach (explode(",", $_POST['email']) as $rec) {
-		if(!filter_var(trim($rec), FILTER_VALIDATE_EMAIL)) 			{ $Result->show("danger", _("Invalid email address")." - ".$rec, true); }
+if(!is_blank($_POST['email'])) {
+	foreach (pf_explode(",", $_POST['email']) as $rec) {
+		if(!filter_var(trim($rec), FILTER_VALIDATE_EMAIL)) 			{ $Result->show("danger", _("Invalid email address")." - ".escape_input($rec), true); }
 	}
 }
 
@@ -54,7 +54,7 @@ $new_access[$_POST['code']] = array("id"=>$_POST['id'],
 									);
 
 # create array of values for modification
-$old_access = json_decode($User->settings->tempAccess, true);
+$old_access = pf_json_decode($User->settings->tempAccess, true);
 if(!is_array($old_access)) {
 	$old_access = array();
 } else {
@@ -74,7 +74,7 @@ if(!$Admin->object_modify("settings", "edit", "id", array("id"=>1,"tempAccess"=>
 else 																							{ $Result->show("success", _("Temporary share created"), false); }
 
 # send mail
-if(strlen($_POST['email'])>0) {
+if(!is_blank($_POST['email'])) {
 	# try to send
 	try {
 		# fetch mailer settings
@@ -106,7 +106,7 @@ if(strlen($_POST['email'])>0) {
 		$content_plain 	= implode("\r\n",$content_plain);
 
 		$phpipam_mail->Php_mailer->setFrom($mail_settings->mAdminMail, $mail_settings->mAdminName);
-		foreach(explode(",", $_POST['email']) as $r) {
+		foreach(pf_explode(",", $_POST['email']) as $r) {
 		$phpipam_mail->Php_mailer->addAddress(addslashes(trim($r)));
 		}
 		$phpipam_mail->Php_mailer->Subject = "New ipam share created";

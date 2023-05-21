@@ -81,7 +81,7 @@ else {
 			# format diff
     		$changelog = str_replace("\r\n", "<br>",$l['cdiff']);
     		$changelog = str_replace("\n", "<br>",$changelog);
-    		$changelog = array_filter(explode("<br>", $changelog));
+    		$changelog = array_filter(pf_explode("<br>", $changelog));
 
             $diff = array();
 
@@ -102,8 +102,8 @@ else {
         		}
 
         		// field
-        		$field = explode(":", $c);
-        	    $value = isset($field[1]) ? explode("=>", $field[1]) : [null];
+        		$field = array_pad(explode(":", $c), 2 , '');
+        	    $value = array_pad(explode("=>", $field[1]), 2, '');
 
         	    $field = trim(str_replace(array("[","]"), "", $field[0]));
         	    if(is_array(@$Log->changelog_keys[$type])) {
@@ -134,7 +134,7 @@ else {
 			print "	<td>$l[ctype]</td>";
 
 			# subnet, section or ip address
-			if(strlen($l['tid'])==0) {
+			if(is_blank($l['tid'])) {
 				print "<td><span class='badge badge1 badge5 alert-danger'>"._("Deleted")."</span></td>";
 			}
 			elseif($l['ctype']=="IP address")	{

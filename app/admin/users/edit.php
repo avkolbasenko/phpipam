@@ -129,7 +129,7 @@ $(document).ready(function(){
 
 
         <input type="hidden" name="userId" value="<?php print @$user['id']; ?>">
-        <input type="hidden" name="action" value="<?php print $_POST['action']; ?>">
+        <input type="hidden" name="action" value="<?php print escape_input($_POST['action']); ?>">
         <input type="hidden" name="csrf_cookie" value="<?php print $csrf; ?>">
 
         </td>
@@ -286,7 +286,7 @@ $(document).ready(function(){
 		//print groups
 		if($groups!==false) {
 			//set groups
-			$ugroups = json_decode(@$user['groups'], true);
+			$ugroups = pf_json_decode(@$user['groups'], true);
 			$ugroups = $Admin->groups_parse_ids($ugroups);
 
 			foreach($groups as $g) {
@@ -361,7 +361,7 @@ $(document).ready(function(){
 	$perm_modules["perm_vaults"] = "Vaults";
 
 	// get permissions
-	$module_permissions = json_decode($user['module_permissions'], true);
+	$module_permissions = pf_json_decode($user['module_permissions'], true);
 
 	// loop
 	foreach ($perm_modules as $key=>$name) {
@@ -419,7 +419,7 @@ $(document).ready(function(){
 	<div class="btn-group">
 		<button class="btn btn-sm btn-default hidePopups"><?php print _('Cancel'); ?></button>
 		<button class='btn btn-sm btn-default submit_popup <?php if($_POST['action']=="delete") { print "btn-danger"; } else { print "btn-success"; } ?>' data-script="app/admin/users/edit-result.php" data-result_div="usersEditResult" data-form='usersEdit'>
-			<i class="fa <?php if($_POST['action']=="add") { print "fa-plus"; } else if ($_POST['action']=="delete") { print "fa-trash-o"; } else { print "fa-check"; } ?>"></i> <?php print ucwords(_($_POST['action'])); ?>
+			<i class="fa <?php if($_POST['action']=="add") { print "fa-plus"; } else if ($_POST['action']=="delete") { print "fa-trash-o"; } else { print "fa-check"; } ?>"></i> <?php print escape_input(ucwords(_($_POST['action']))); ?>
 		</button>
 	</div>
 

@@ -25,7 +25,7 @@ else {
 
 		// fetch item
 		$vault_item = $Tools->fetch_object("vaultItems", "id", $_GET['sPage']);
-		$vault_item_values = json_decode($User->Crypto->decrypt($vault_item->values, $_SESSION[$vault_id]));
+		$vault_item_values = pf_json_decode($User->Crypto->decrypt($vault_item->values, $_SESSION[$vault_id]));
 
 		// get custom fields
 		$custom_fields = $Tools->fetch_custom_fields('vaultItems');
@@ -73,7 +73,7 @@ else {
 
 				print "<tr>";
 				print "	<th>".$Tools->print_custom_field_name ($key)."</th>";
-				print "	<td style='vertical-align:top;align:left;'>".$vault_item->{$key}."</td>";
+				print "	<td style='vertical-align:top;align-content:left;'>".$vault_item->{$key}."</td>";
 				print "</tr>";
 			}
 		}
@@ -188,7 +188,7 @@ else {
 				print "<tr>";
 				print "	<td colspan='2'><h4 style='margin-top:30px;'>"._("Issuer")."</h4><hr></td>";
 				print "</tr>";
-				if(strlen($certificate_details['issuer']['C'])>0) {
+				if(!is_blank($certificate_details['issuer']['C'])) {
 				print "<tr>";
 				print "	<th>"._("Country")."</th>";
 				print "	<td>".$certificate_details['issuer']['C']."</td>";
@@ -206,7 +206,7 @@ else {
 				print "	<td>".$certificate_details['issuer']['L']."</td>";
 				print "</tr>";
 				}
-				if(strlen($certificate_details['issuer']['O'])>0) {
+				if(!is_blank($certificate_details['issuer']['O'])) {
 				print "<tr>";
 				print "	<th>"._("Organisation name")."</th>";
 				print "	<td>".$certificate_details['issuer']['O']."</td>";

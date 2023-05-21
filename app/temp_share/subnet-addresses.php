@@ -14,14 +14,14 @@ $DNS = new DNS ($Database, $User->settings);
 # reset custom fields to ip addresses
 $custom_fields = $Tools->fetch_custom_fields ('ipaddresses');
 # set hidden custom fields
-$hidden_cfields = json_decode($settings->hiddenCustomFields, true);
+$hidden_cfields = pf_json_decode($settings->hiddenCustomFields, true);
 $hidden_cfields = is_array($hidden_cfields['ipaddresses']) ? $hidden_cfields['ipaddresses'] : array();
 
 # set selected address fields array
 $selected_ip_fields = $settings->IPfilter;
-$selected_ip_fields = explode(";", $selected_ip_fields);																			//format to array
+$selected_ip_fields = pf_explode(";", $selected_ip_fields);																			//format to array
 $selected_ip_fields_size = in_array('state', $selected_ip_fields) ? (sizeof($selected_ip_fields)-1) : sizeof($selected_ip_fields);	//set size of selected fields
-if($selected_ip_fields_size==1 && strlen($selected_ip_fields[0])==0) { $selected_ip_fields_size = 0; }								//fix for 0
+if($selected_ip_fields_size==1 && is_blank($selected_ip_fields[0])) { $selected_ip_fields_size = 0; }								//fix for 0
 
 
 /* Addresses and fields manupulations */
@@ -41,7 +41,7 @@ foreach($custom_fields as $field) {
 	if($addresses!==false) {
 		foreach($addresses as $ip) {
 			$ip = (array) $ip;
-			if(strlen($ip[$field['name']]) > 0) {
+			if(!is_blank($ip[$field['name']])) {
 				$sizeMyFields[$field['name']]++;		// +1
 			}
 		}
@@ -61,7 +61,7 @@ foreach($custom_fields as $field) {
 # set page limit for pagination
 $page_limit = 100000000;
 # set ping statuses for warning and offline
-$statuses = explode(";", $settings->pingStatus);
+$statuses = pf_explode(";", $settings->pingStatus);
 ?>
 
 <!-- print title and pagenum -->
@@ -231,7 +231,7 @@ else {
 						}
 						//text
 						elseif($myField['type']=="text") {
-							if(strlen($addresses[$n]->{$myField['name']})>0)	{ print "<i class='fa fa-gray fa-comment' rel='tooltip' data-container='body' data-html='true' title='".str_replace("\n", "<br>", $addresses[$n][$myField['name']])."'>"; }
+							if(!is_blank($addresses[$n]->{$myField['name']}))	{ print "<i class='fa fa-gray fa-comment' rel='tooltip' data-container='body' data-html='true' title='".str_replace("\n", "<br>", $addresses[$n][$myField['name']])."'>"; }
 							else											{ print ""; }
 						}
 						else {

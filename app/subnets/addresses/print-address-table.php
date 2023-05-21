@@ -50,7 +50,7 @@ if(!is_numeric($_GET['subnetId'])) 		{ $Result->show("danger", _('Invalid ID'), 
 # reset custom fields to ip addresses
 $custom_fields = $Tools->fetch_custom_fields ('ipaddresses');
 # set hidden custom fields
-$hidden_cfields = json_decode($User->settings->hiddenCustomFields, true) ? : ['ipaddresses'=>null];
+$hidden_cfields = pf_json_decode($User->settings->hiddenCustomFields, true) ? : ['ipaddresses'=>null];
 $hidden_cfields = is_array($hidden_cfields['ipaddresses']) ? $hidden_cfields['ipaddresses'] : array();
 
 # set selected address fields array
@@ -80,7 +80,7 @@ $cnt_obj = ["port"=>0, "switch"=>0, "owner"=>0, "note"=>0, "mac"=>0, "customer_i
 foreach ($addresses as $a) {
 	foreach($cnt_obj as $field => $c) {
 		// Remove field from $cnt_obj if we find a match
-		if (strlen($a->{$field})>0) { unset($cnt_obj[$field]); }
+		if (!is_blank($a->{$field})) { unset($cnt_obj[$field]); }
 	}
 }
 // remove empty fields in $cnt_obj
@@ -97,7 +97,7 @@ foreach($custom_fields as $field) {
 		$addresses = (array) $addresses;
 		foreach($addresses as $ip) {
 			$ip = (array) $ip;
-			if(strlen($ip[$field['name']]) > 0) {
+			if(!is_blank($ip[$field['name']])) {
 				$sizeMyFields[$field['name']]++;		// +1
 			}
 		}
@@ -118,12 +118,12 @@ if(sizeof($custom_fields) > 0) {
 }
 
 # set ping statuses for warning and offline
-$statuses = explode(";", $User->settings->pingStatus);
+$statuses = pf_explode(";", $User->settings->pingStatus);
 
 # Set $zone
 if(in_array('firewallAddressObject', $selected_ip_fields)) {
 	# class
-	if(!is_object($Zones)) $Zones = new FirewallZones ($Database);
+	if (!isset($Zones)) $Zones = new FirewallZones($Database);
 	$zone = $Zones->get_zone_subnet_info($subnet['id']);
 } else {
 	$zone = false;
@@ -398,7 +398,7 @@ else {
 				# Print mac address icon!
 				if(in_array('mac', $selected_ip_fields)) {
                     # normalize MAC address
-                	if(strlen(@$addresses[$n]->mac)>0) {
+                	if(!is_blank(@$addresses[$n]->mac)) {
                     	if($User->validate_mac ($addresses[$n]->mac)!==false) {
                         	$addresses[$n]->mac = $User->reformat_mac_address ($addresses[$n]->mac, 1);
                     	}
@@ -444,24 +444,22 @@ else {
 
 	       		# print info button for hover
 	       		if(in_array('note', $selected_ip_fields)) {
-
-	       			$addresses[$n]->note = str_replace("'", "&#39;", $addresses[$n]->note);
-
-	        		if(!empty($addresses[$n]->note)) 					{ print "<td class='narrow'><i class='fa fa-gray fa-comment-o' rel='tooltip' data-container='body' data-html='true' title='".str_replace("\n", "<br>",addslashes($addresses[$n]->note))."'></i></td>"; }
+	        		if(!empty($addresses[$n]->note)) 					{ print "<td class='narrow'><i class='fa fa-gray fa-comment-o' rel='tooltip' data-container='body' data-html='true' title='".str_replace("\n", "<br>", escape_input($addresses[$n]->note))."'></i></td>"; }
 	        		else 												{ print "<td class='narrow'></td>"; }
 	        	}
 
-	        	# print device
-	        	if(in_array('switch', $selected_ip_fields) && $User->get_module_permissions ("devices")>=User::ACCESS_R) {
-		        	# get device details
-		        	$device = (array) $Tools->fetch_object("devices", "id", $addresses[$n]->switch);
-		        	# set rack
-		        	if ($User->settings->enableRACK=="1" && $User->get_module_permissions ("racks")>=User::ACCESS_RW) {
-		        	$rack = $device['rack']>0 ? "<i class='btn btn-default btn-xs fa fa-server showRackPopup' data-rackid='$device[rack]' data-deviceid='$device[id]'></i>" : "";
-																		  print "<td class='hidden-xs hidden-sm hidden-md'>$rack <a href='".create_link("tools","devices",@$device['id'])."'>". @$device['hostname'] ."</a></td>";
-					}
-					else {
-						print "<td class='hidden-xs hidden-sm hidden-md'> <a href='".create_link("tools","devices",@$device['id'])."'>". @$device['hostname'] ."</a></td>";
+				# print device
+				if (in_array('switch', $selected_ip_fields) && $User->get_module_permissions("devices") >= User::ACCESS_R) {
+					# get device details
+					$device = $Tools->fetch_object("devices", "id", $addresses[$n]->switch);
+					if (is_object($device)) {
+						$rack = "";
+						if ($User->settings->enableRACK == "1" && $User->get_module_permissions("racks") >= User::ACCESS_R && $device->rack > 0) {
+							$rack = "<i class='btn btn-default btn-xs fa fa-server showRackPopup' data-rackid='" . $device->rack . "' data-deviceid='" . $device->id . "'></i>";
+						}
+						print "<td class='hidden-xs hidden-sm hidden-md'>$rack<a href='" . create_link("tools", "devices", $device->id) . "'>" . escape_input($device->hostname) . "</a></td>";
+					} else {
+						print "<td class='hidden-xs hidden-sm hidden-md'></td>";
 					}
 				}
 
@@ -503,7 +501,7 @@ else {
 							}
 							//text
 							elseif($myField['type']=="text") {
-								if(strlen($addresses[$n]->{$myField['name']})>0)	{ print "<i class='fa fa-gray fa-comment' rel='tooltip' data-container='body' data-html='true' title='".str_replace("\n", "<br>", $addresses[$n]->{$myField['name']})."'>"; }
+								if(!is_blank($addresses[$n]->{$myField['name']}))	{ print "<i class='fa fa-gray fa-comment' rel='tooltip' data-container='body' data-html='true' title='".str_replace("\n", "<br>", $addresses[$n]->{$myField['name']})."'>"; }
 								else											{ print ""; }
 							}
 							else {
@@ -538,7 +536,7 @@ else {
 				{
 					print "<a class='edit_ipaddress   btn btn-xs btn-default modIPaddr' data-action='edit'   data-subnetId='".$addresses[$n]->subnetId."' data-id='".$addresses[$n]->id."' href='#' >															<i class='fa fa-gray fa-pencil'></i></a>";
 					print "<a class='ping_ipaddress   btn btn-xs btn-default' data-subnetId='".$addresses[$n]->subnetId."' data-id='".$addresses[$n]->id."' href='#' rel='tooltip' data-container='body' title='"._('Check availability')."'>					<i class='fa fa-gray fa-cogs'></i></a>";
-					print "<a class='search_ipaddress btn btn-xs btn-default         "; if(strlen($resolve['name']) == 0) { print "disabled"; } print "' href='".create_link("tools","search", $resolve['name'])."' "; if(strlen($resolve['name']) != 0)   { print "rel='tooltip' data-container='body' title='"._('Search same hostnames in db')."'"; } print ">	<i class='fa fa-gray fa-search'></i></a>";
+					print "<a class='search_ipaddress btn btn-xs btn-default         "; if(is_blank($resolve['name'])) { print "disabled"; } print "' href='".create_link("tools","search", $resolve['name'])."' "; if(!is_blank($resolve['name']))   { print "rel='tooltip' data-container='body' title='"._('Search same hostnames in db')."'"; } print ">	<i class='fa fa-gray fa-search'></i></a>";
 					print "<a class='mail_ipaddress   btn btn-xs btn-default          ' href='#' data-id='".$addresses[$n]->id."' rel='tooltip' data-container='body' title='"._('Send mail notification')."'>																																		<i class='fa fa-gray fa-envelope-o'></i></a>";
 					if($zone) { print "<a class='fw_autogen	   	  btn btn-default btn-xs          ' href='#' data-subnetid='".$addresses[$n]->subnetId."' data-action='adr' data-ipid='".$addresses[$n]->id."' data-dnsname='".$addresses[$n]->hostname."' rel='tooltip' data-container='body' title='"._('Generate or regenerate a firewall address object of this ip address.')."'><i class='fa fa-gray fa-repeat'></i></a>"; }
 					print "<a class='delete_ipaddress btn btn-xs btn-default modIPaddr' data-action='delete' data-subnetId='".$addresses[$n]->subnetId."' data-id='".$addresses[$n]->id."' href='#' id2='".$Subnets->transform_to_dotted($addresses[$n]->ip_addr)."'>		<i class='fa fa-gray fa-times'>  </i></a>";
@@ -558,7 +556,7 @@ else {
 				{
 					print "<a class='edit_ipaddress   btn btn-xs btn-default disabled' rel='tooltip' data-container='body' title='"._('Edit IP address details (disabled)')."'>													<i class='fa fa-gray fa-pencil'></i></a>";
 					print "<a class='				   btn btn-xs btn-default disabled'  data-id='".$addresses[$n]->id."' href='#' rel='tooltip' data-container='body' title='"._('Check availability')."'>					<i class='fa fa-gray fa-cogs'></i></a>";
-					print "<a class='search_ipaddress btn btn-xs btn-default         "; if(strlen($resolve['name']) == 0) { print "disabled"; } print "' href='".create_link("tools","search",$resolve['name'])."' "; if(strlen($resolve['name']) != 0) { print "rel='tooltip' data-container='body' title='"._('Search same hostnames in db')."'"; } print ">	<i class='fa fa-gray fa-search'></i></a>";
+					print "<a class='search_ipaddress btn btn-xs btn-default         "; if(is_blank($resolve['name'])) { print "disabled"; } print "' href='".create_link("tools","search",$resolve['name'])."' "; if(!is_blank($resolve['name'])) { print "rel='tooltip' data-container='body' title='"._('Search same hostnames in db')."'"; } print ">	<i class='fa fa-gray fa-search'></i></a>";
 					print "<a class='mail_ipaddress   btn btn-xs btn-default          ' href='#' data-id='".$addresses[$n]->id."' rel='tooltip' data-container='body' title='"._('Send mail notification')."'>				<i class='fa fa-gray fa-envelope-o'></i></a>";
 					print "<a class='delete_ipaddress btn btn-xs btn-default disabled' rel='tooltip' data-container='body' title='"._('Delete IP address (disabled)')."'>														<i class='fa fa-gray fa-times'></i></a>";
 				}
@@ -569,7 +567,7 @@ else {
 			print '</tr>'. "\n";
 
 			// now search for similar addresses if chosen
-			if (strlen($User->settings->link_field)>0) {
+			if (!is_blank($User->settings->link_field)) {
     			// search
     			$similar = $Addresses->search_similar_addresses ($addresses[$n], $User->settings->link_field, $addresses[$n]->{$User->settings->link_field});
 

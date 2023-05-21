@@ -10,7 +10,7 @@ $User->check_user_session();
 # fetch custom fields
 $custom = $Tools->fetch_custom_fields('pstnPrefixes');
 # get hidden fields */
-$hidden_fields = json_decode($User->settings->hiddenCustomFields, true);
+$hidden_fields = pf_json_decode($User->settings->hiddenCustomFields, true);
 $hidden_fields = is_array(@$hidden_fields['pstnPrefixes']) ? $hidden_fields['pstnPrefixes'] : array();
 
 # check
@@ -109,7 +109,7 @@ else {
     					}
     					//text
     					elseif($field['type']=="text") {
-    						if(strlen($sp->{$field['name']})>0)		{ print "<i class='fa fa-gray fa-comment' rel='tooltip' data-container='body' data-html='true' title='".str_replace("\n", "<br>", $sp->{$field['name']})."'>"; }
+    						if(!is_blank($sp->{$field['name']}))		{ print "<i class='fa fa-gray fa-comment' rel='tooltip' data-container='body' data-html='true' title='".str_replace("\n", "<br>", $sp->{$field['name']})."'>"; }
     						else										{ print ""; }
     					}
     					else {

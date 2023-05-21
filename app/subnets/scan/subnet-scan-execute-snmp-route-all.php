@@ -248,13 +248,13 @@ else {
                             if($vrfs!=false) {
                     	        foreach($vrfs as $vrf) {
                         	        // set permitted
-                        	        $permitted_sections = explode(";", $vrf->sections);
+                        	        $permitted_sections = pf_explode(";", $vrf->sections);
                         	        // section must be in array
-                        	        if (strlen($vrf->sections)==0 || in_array(@$_POST['sectionId'], $permitted_sections)) {
+                        	        if (is_blank($vrf->sections) || in_array(@$_POST['sectionId'], $permitted_sections)) {
                         				//cast
                         				$vrf = (array) $vrf;
                         				// set description if present
-                        				$vrf['description'] = strlen($vrf['description'])>0 ? " ($vrf[description])" : "";
+                        				$vrf['description'] = !is_blank($vrf['description']) ? " ($vrf[description])" : "";
                         	        	print '<option value="'. $vrf['vrfId'] .'">'.$vrf['name'].$vrf['description'].'</option>';
                         	        }
                     	        }
@@ -275,7 +275,7 @@ else {
                         				foreach($n as $ns) {
                         					// set print
                         					$printNS = "$ns->name";
-                        					$printNS .= " (" . array_shift(explode(";",$ns->namesrv1)).",...)";
+                        					$printNS .= " (" . array_shift(pf_explode(";",$ns->namesrv1)).",...)";
                                             print '<option value="'. $ns->id .'">'. $printNS .'</option>'. "\n";
                         				}
                         			}

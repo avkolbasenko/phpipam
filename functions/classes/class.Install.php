@@ -146,7 +146,7 @@ class Install extends Common_functions {
 		$esc_user = addcslashes($this->db['user'],"'");
 		$esc_pass = addcslashes($this->db['pass'],"'");
 		$db_name  = $this->db['name'];
-		$webhost  = is_string($this->db['webhost']) && strlen($this->db['webhost']) > 0 ? addcslashes($this->db['webhost'],"'") : 'localhost';
+		$webhost  = is_string($this->db['webhost']) && !is_blank($this->db['webhost']) ? addcslashes($this->db['webhost'],"'") : 'localhost';
 
 		try {
 			# Check if user exists;
@@ -179,7 +179,7 @@ class Install extends Common_functions {
 		}
 
 	    # formulate queries
-	    $queries = array_filter(explode(";\n", $query));
+	    $queries = array_filter(pf_explode(";\n", $query));
 
 	    # append version
 		$queries[] = "UPDATE `settings` SET `version` = '".VERSION."'";
@@ -189,7 +189,7 @@ class Install extends Common_functions {
 	    # execute
 	    foreach($queries as $q) {
 		    //length check
-		    if (strlen($q)>0) {
+		    if (!is_blank($q)) {
 				try { $this->Database_root->runQuery($q.";"); }
 				catch (Exception $e) {
 					//unlock tables
@@ -248,17 +248,28 @@ class Install extends Common_functions {
 	 * Checks if table exists
 	 *
 	 * @access public
-	 * @param mixed $table
-	 * @return void
+	 * @param string $table
+	 * @return bool
 	 */
 	public function check_table ($table, $redirect = false) {
 		# set query
-		$query = "SELECT COUNT(*) AS `cnt` FROM information_schema.tables WHERE table_schema = '".$this->db['name']."' AND table_name = '$table';";
+		$query = "SELECT COUNT(*) AS `cnt` FROM information_schema.tables WHERE table_schema = '" . $this->db['name'] . "' AND table_name = '$table';";
 		# try to fetch count
-		try { $table = $this->Database->getObjectQuery($query); }
-		catch (Exception $e) 	{ if($redirect === true) $this->redirect_to_install ();	else return false; }
+		try {
+			$result = $this->Database->getObjectQuery($query);
+		} catch (Exception $e) {
+			if ($redirect === true) {
+				$this->redirect_to_install();
+			}
+			return false;
+		}
 		# redirect if it is not existing
-		if($table->cnt!=1) 	 	{ if($redirect === true) $this->redirect_to_install ();	else return false; }
+		if (!is_object($result) || $result->cnt != 1) {
+			if ($redirect === true) {
+				$this->redirect_to_install();
+			}
+			return false;
+		}
 		# ok
 		return true;
 	}
@@ -507,7 +518,7 @@ class Upgrade extends Install {
 			# execute all queries
 			foreach($queries as $k=>$query) {
 				// execute
-				if(strpos($query, "--")!==0 && strlen(trim($query))>0) {
+				if(strpos($query, "--")!==0 && !is_blank(trim($query ?: ''))) {
 					$ignore_on_failure = (strpos($query, '-- IGNORE_ON_FAILURE')!== false);
 
 					if ($ignore_on_failure) $this->Database->setErrMode(\PDO::ERRMODE_SILENT);

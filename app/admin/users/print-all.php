@@ -13,7 +13,7 @@ $users = $Admin->fetch_all_objects("users", "username");
 $custom = $Tools->fetch_custom_fields('users');
 
 /* check customfields */
-$ffields = json_decode($User->settings->hiddenCustomFields, true);
+$ffields = pf_json_decode($User->settings->hiddenCustomFields, true);
 $ffields = is_array(@$ffields['users']) ? $ffields['users'] : array();
 ?>
 
@@ -75,7 +75,7 @@ foreach ($users as $user) {
 	print '	<td>' . $user['role']      . '</td>'. "\n";
 
 	# language
-	if(strlen($user['lang'])>0) {
+	if(!is_blank($user['lang'])) {
 		# get lang name
 		$lname = $Admin->fetch_object("lang", "l_id", $user['lang']);
 		print "<td>$lname->l_name</td>";
@@ -107,7 +107,7 @@ foreach ($users as $user) {
 	print '	<td>'._('All groups').'</td>'. "\n";
 	}
 	else {
-		$groups = json_decode($user['groups'], true);
+		$groups = pf_json_decode($user['groups'], true);
 		$gr = $Admin->groups_parse($groups);
 
 		print '	<td>';
@@ -124,7 +124,7 @@ foreach ($users as $user) {
 
 	# last login
 	print "<td>";
-	print strlen($user['lastLogin'])>0 ? $user['lastLogin'] : "<span class='text-muted'>"._("Never")."</span>";
+	print !is_blank($user['lastLogin']) ? $user['lastLogin'] : "<span class='text-muted'>"._("Never")."</span>";
 	print "</td>";
 
 	# custom
@@ -139,7 +139,7 @@ foreach ($users as $user) {
 				}
 				//text
 				elseif($field['type']=="text") {
-					if(strlen($user[$field['name']])>0)		{ print "<i class='fa fa-gray fa-comment' rel='tooltip' data-container='body' data-html='true' title='".str_replace("\n", "<br>", $user[$field['name']])."'>"; }
+					if(!is_blank($user[$field['name']]))		{ print "<i class='fa fa-gray fa-comment' rel='tooltip' data-container='body' data-html='true' title='".str_replace("\n", "<br>", $user[$field['name']])."'>"; }
 					else									{ print ""; }
 				}
 				else {

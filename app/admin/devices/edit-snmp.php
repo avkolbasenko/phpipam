@@ -37,7 +37,7 @@ elseif ($device->snmp_version=="3")                             { $display=''; $
 else                                                            { $display=''; $display_v3 = ''; }
 
 // default values
-if (strlen($device->snmp_timeout)==0)   { $device->snmp_timeout = 1000; }
+if (is_blank($device->snmp_timeout))   { $device->snmp_timeout = 1000; }
 ?>
 
 <script>
@@ -209,7 +209,7 @@ $('#switchSNMPManagementEdit').change(function() {
 		<td style="text-align:top">
 		<?php
 		# select queries
-		$queries = explode(";", $device->snmp_queries);
+		$queries = pf_explode(";", $device->snmp_queries);
 		$queries = is_array($queries) ? $queries : array();
         // loop
 		foreach($Snmp->snmp_queries as $k=>$m) {

@@ -103,11 +103,11 @@ $custom = $Tools->fetch_custom_fields('pstnPrefixes');
     	<tr>
         	<th><?php print _('Name'); ?></th>
         	<td>
-            	<input type="text" class="form-control input-sm" name="name" value="<?php print $Tools->strip_xss($prefix->name); ?>" placeholder='<?php print _('Name'); ?>' <?php print $readonly; ?>>
+            	<input type="text" class="form-control input-sm" name="name" value="<?php print $Tools->strip_xss(@$prefix->name); ?>" placeholder='<?php print _('Name'); ?>' <?php print $readonly; ?>>
             	<input type="hidden" name="csrf_cookie" value="<?php print $csrf; ?>">
-            	<input type="hidden" name="id" value="<?php print $prefix->id; ?>">
-            	<input type="hidden" name="master" value="<?php print $prefix->master; ?>">
-            	<input type="hidden" name="action" value="<?php print $_POST['action']; ?>">
+            	<input type="hidden" name="id" value="<?php print @$prefix->id; ?>">
+            	<input type="hidden" name="master" value="<?php print @$prefix->master; ?>">
+            	<input type="hidden" name="action" value="<?php print escape_input($_POST['action']); ?>">
         	</td>
         	<td>
             	<span class="text-muted"><?php print _("Set Prefix name"); ?></span>
@@ -118,7 +118,7 @@ $custom = $Tools->fetch_custom_fields('pstnPrefixes');
     	<tr>
         	<th><?php print _('Prefix'); ?></th>
         	<td>
-            	<input type="text" class="form-control input-sm" name="prefix" value="<?php print $Tools->strip_xss($prefix->prefix); ?>" placeholder='<?php print _('Prefix'); ?>' <?php print $readonly; ?>>
+            	<input type="text" class="form-control input-sm" name="prefix" value="<?php print $Tools->strip_xss(@$prefix->prefix); ?>" placeholder='<?php print _('Prefix'); ?>' <?php print $readonly; ?>>
         	</td>
         	<td>
             	<span class="text-muted"><?php print _("Prefix"); ?></span>
@@ -129,7 +129,7 @@ $custom = $Tools->fetch_custom_fields('pstnPrefixes');
     	<tr>
         	<th><?php print _('Start'); ?></th>
         	<td>
-            	<input type="text" class="form-control input-sm" name="start" style="width:70px;" value="<?php print $prefix->start; ?>" placeholder='<?php print _('Start'); ?>' <?php print $readonly; ?>>
+            	<input type="text" class="form-control input-sm" name="start" style="width:70px;" value="<?php print @$prefix->start; ?>" placeholder='<?php print _('Start'); ?>' <?php print $readonly; ?>>
         	</td>
         	<td>
             	<span class="text-muted"><?php print _("Set start number"); ?></span>
@@ -140,7 +140,7 @@ $custom = $Tools->fetch_custom_fields('pstnPrefixes');
     	<tr>
         	<th><?php print _('Stop'); ?></th>
         	<td>
-            	<input type="text" class="form-control input-sm" name="stop" style="width:70px;"  value="<?php print $prefix->stop; ?>" placeholder='<?php print _('Stop'); ?>' <?php print $readonly; ?>>
+            	<input type="text" class="form-control input-sm" name="stop" style="width:70px;"  value="<?php print @$prefix->stop; ?>" placeholder='<?php print _('Stop'); ?>' <?php print $readonly; ?>>
         	</td>
         	<td>
             	<span class="text-muted"><?php print _("Set stop number"); ?></span>
@@ -198,7 +198,7 @@ $custom = $Tools->fetch_custom_fields('pstnPrefixes');
     	<tr>
         	<th><?php print _('Description'); ?></th>
         	<td colspan="2">
-            	<textarea class="form-control input-sm" name="description" placeholder='<?php print $prefix->description; ?>' <?php print $readonly; ?>><?php print $prefix->description; ?></textarea>
+            	<textarea class="form-control input-sm" name="description" placeholder='<?php print @$prefix->description; ?>' <?php print $readonly; ?>><?php print @$prefix->description; ?></textarea>
         	</td>
         </tr>
 
@@ -235,7 +235,7 @@ $custom = $Tools->fetch_custom_fields('pstnPrefixes');
 <div class="pFooter">
 	<div class="btn-group">
 		<button class="btn btn-sm btn-default hidePopups"><?php print _('Cancel'); ?></button>
-		<button class="btn btn-sm btn-default <?php if($_POST['action']=="delete") { print "btn-danger"; } else { print "btn-success"; } ?>" id="editPSTNSubmit"><i class="fa <?php if($_POST['action']=="add") { print "fa-plus"; } else if ($_POST['action']=="delete") { print "fa-trash-o"; } else { print "fa-check"; } ?>"></i> <?php print ucwords(_($_POST['action'])); ?></button>
+		<button class="btn btn-sm btn-default <?php if($_POST['action']=="delete") { print "btn-danger"; } else { print "btn-success"; } ?>" id="editPSTNSubmit"><i class="fa <?php if($_POST['action']=="add") { print "fa-plus"; } else if ($_POST['action']=="delete") { print "fa-trash-o"; } else { print "fa-check"; } ?>"></i> <?php print escape_input(ucwords(_($_POST['action']))); ?></button>
 	</div>
 	<!-- result -->
 	<div class="editPSTNResult"></div>

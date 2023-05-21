@@ -72,7 +72,7 @@ if($slaves) {
 								// remove found subnets with hosts !
 								foreach($found as $k=>$f) {
 									// parse
-									$parsed = explode("/", $f);
+									$parsed = $Subnets->cidr_network_and_mask($f);
 									// boundaries
 									$boundaries = $Subnets->get_network_boundaries ($parsed[0], $searchmask);
 									// broadcast to int

@@ -53,12 +53,12 @@ $cfields = $Tools->fetch_custom_fields ('vrf');
         <div class="text-muted">
         <?php
         	// format sections
-        	if(strlen($vrf->sections)==0) {
+        	if(is_blank($vrf->sections)) {
         		$sections = "All sections";
         	}
         	else {
         		//explode
-        		$sections_tmp = explode(";", $vrf->sections);
+        		$sections_tmp = pf_explode(";", $vrf->sections);
         		foreach($sections_tmp as $t) {
         			//fetch section
         			$tmp_section = $Sections->fetch_section(null, $t);
@@ -110,7 +110,7 @@ $cfields = $Tools->fetch_custom_fields ('vrf');
 			$vrf->{$key} = $Tools->create_links($vrf->{$key});
 			print "<tr>";
 			print "	<th>$key</th>";
-			print "	<td style='vertical-align:top;align:left;'>".$vrf->{$key}."</td>";
+			print "	<td style='vertical-align:top;align-content:left;'>".$vrf->{$key}."</td>";
 			print "</tr>";
 		}
 		// divider
@@ -121,8 +121,8 @@ $cfields = $Tools->fetch_custom_fields ('vrf');
 	if($User->get_module_permissions ("vrf")>=User::ACCESS_RW) {
 		# action button groups
 		print "<tr>";
-		print "	<th style='vertical-align:bottom;align:left;'>"._('Actions')."</th>";
-		print "	<td style='vertical-align:bottom;align:left;'>";
+		print "	<th style='vertical-align:bottom;align-content:left;'>"._('Actions')."</th>";
+		print "	<td style='vertical-align:bottom;align-content:left;'>";
 
 		// actions
         $links = [];

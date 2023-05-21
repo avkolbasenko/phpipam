@@ -24,7 +24,7 @@ foreach ($Subnets->get_all_possible_subnet_addresses($subnet) as $m) {
 	if (array_key_exists($m, $visual_addresses)) {
 
 		# fix for empty states - if state is disabled, set to active
-		if(strlen($visual_addresses[$m]['state'])==0) { $visual_addresses[$m]['state'] = 1; }
+		if(is_blank($visual_addresses[$m]['state'])) { $visual_addresses[$m]['state'] = 1; }
 
 		# to edit
 		$class = $visual_addresses[$m]['state'];
@@ -32,8 +32,8 @@ foreach ($Subnets->get_all_possible_subnet_addresses($subnet) as $m) {
 		$id = (int) $visual_addresses[$m]['id'];
 
 		# tooltip
-		if(strlen($visual_addresses[$m]['hostname'])>0)		{ $title .= "<br>".$visual_addresses[$m]['hostname']; }
-		if(strlen($visual_addresses[$m]['description'])>0)	{ $title .= "<br>".$visual_addresses[$m]['description']; }
+		if(!is_blank($visual_addresses[$m]['hostname']))		{ $title .= "<br>".$visual_addresses[$m]['hostname']; }
+		if(!is_blank($visual_addresses[$m]['description']))	{ $title .= "<br>".$visual_addresses[$m]['description']; }
 
 		# set colors
 		$background = $Subnets->address_types[$visual_addresses[$m]['state']]['bgcolor'].$alpha." !important";

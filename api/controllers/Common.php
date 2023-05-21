@@ -1,4 +1,26 @@
 <?php
+/**
+ *  API Parameter class
+ */
+class API_params extends Params {
+
+	/**
+	 * Read array of arguments
+	 *
+	 * @param array $args
+	 * @return void
+	 */
+	public function read($args)
+	{
+		if (!is_array($args))
+			return;
+
+		if (isset($args['controller']))
+			$args['controller'] = strtolower($args['controller']);
+
+		parent::read($args);
+	}
+}
 
 /**
  *	phpIPAM API class for common functions
@@ -394,7 +416,7 @@ class Common_api_functions {
 		if(!isset($this->_params->filter_value))
 			$this->Response->throw_exception(400, _('Missing filter_value'));
 
-		if (strlen($this->_params->filter_value)==0)
+		if (is_blank($this->_params->filter_value))
 			$this->Response->throw_exception(400, _('Empty filter_value'));
 
 		// validate filter_by is a valid property
@@ -522,10 +544,9 @@ class Common_api_functions {
 			$result["slaves"]           = array ("GET");
 			$result["slaves_recursive"] = array ("GET");
 			$result["truncate"]         = array ("DELETE");
-			$result["permissions"]      = array ("DELETE");
+			$result["permissions"]      = array ("DELETE", "PATCH");
 			$result["resize"]           = array ("PATCH");
 			$result["split"]            = array ("PATCH");
-			$result["permissions"]      = array ("PATCH");
 			// return
 			return $result;
 		}
@@ -626,6 +647,8 @@ class Common_api_functions {
 	 * @return void
 	 */
 	protected function transform_address ($result) {
+		$result_is_object = false;
+
 		if (is_object($result)) {
 			$result_is_object = true;
 			$result = [$result];
@@ -812,7 +835,7 @@ class Common_api_functions {
 					if($result->isFolder!="1")			{ unset($result); }
 			}
 			# return
-			if($result===NULL)	{ $this->Response->throw_exception(404, "No folders found"); }
+			if($result===null)	{ $this->Response->throw_exception(404, "No folders found"); }
 			else				{ return $result; }
 	}	}
 
@@ -1006,7 +1029,7 @@ class Common_api_functions {
 	 * @return void
 	 */
 	public function set_transaction_lock_file ($file = "") {
-        if(strlen($file)>0) {
+        if(!is_blank($file)) {
             $this->lock_file_name = $file;
         }
 	}
@@ -1085,7 +1108,7 @@ class Common_api_functions {
 				if (array_key_exists($key, $this->custom_fields)) {
 					$this->_params->$key = $value;
 				} else {
-					$this->Response->throw_exception(400, "${key} is not a valid custom field");
+					$this->Response->throw_exception(400, "{$key} is not a valid custom field");
 				}
 			}
 			unset($this->_params->custom_fields);

@@ -39,6 +39,49 @@ if(!function_exists('hash_equals')) {
 }
 
 /**
+ * Supported in PHP 5 >= 5.6.0
+ * ldap_escape — Escape a string for use in an LDAP filter or DN
+ */
+if (!function_exists('ldap_escape')) {
+	if (!defined('LDAP_ESCAPE_FILTER')) {
+		define('LDAP_ESCAPE_FILTER', 1);
+	}
+	if (!defined('LDAP_ESCAPE_DN')) {
+		define('LDAP_ESCAPE_DN', 2);
+	}
+	function ldap_escape($value, $ignore = null, $flags = 0) {
+		if (!is_string($value) || strlen($value) == 0)
+			return '';
+
+		$search = [];
+		$replace = [];
+
+		if ($flags & LDAP_ESCAPE_FILTER) {
+			$search = array_merge($search, ['\\', '*', '(', ')', "\x00"]);
+		}
+		if ($flags & LDAP_ESCAPE_DN) {
+			$search = array_merge($search, ['\\', ',', '=', '+', '<', '>', ';', '"', '#', "\r"]);
+		}
+
+		$search = array_unique($search);
+
+		if (empty($search)) {
+			$v = [];
+			foreach (str_split($value) as $s) {
+				$v[] = sprintf('\\%02x', ord($s));
+			}
+			$value = implode($v);
+		}
+
+		foreach ($search as $s) {
+			$replace[] = sprintf('\\%02x', ord($s));
+		}
+
+		return str_replace($search, $replace, $value);
+	}
+}
+
+/**
  *  Supported in PHP 5 >= 5.5.0
  *  For older php versions make sure that function "json_last_error_msg" exist and create it if not
 */
@@ -83,7 +126,7 @@ function create_link ($l0 = null, $l1 = null, $l2 = null, $l3 = null, $l4 = null
 		return BASE;
 
 	# Pretty Links
-	if($User->settings->prettyLinks=="Yes") {
+	if(is_object($User) && $User->settings->prettyLinks=="Yes") {
 		$link = BASE.implode('/', $parts);
 
 		# IP search fix
@@ -107,12 +150,22 @@ function create_link ($l0 = null, $l1 = null, $l2 = null, $l3 = null, $l4 = null
 }
 
 /**
+ * Do we have data with length >1
+ *
+ * @param mixed $data
+ * @return boolean
+ */
+function is_blank($data) {
+	return (!isset($data) || strlen($data)==0) ? true : false;
+}
+
+/**
  * Escape HTML and quotes in user provided input
  * @param  mixed $data
  * @return string
  */
 function escape_input($data) {
-	if (!isset($data) || strlen($data)==0)
+	if (is_blank($data))
 		return '';
 	$safe_data = htmlentities($data, ENT_QUOTES);
 	return is_string($safe_data) ? $safe_data : '';
@@ -236,3 +289,6 @@ function setcookie_samesite($name, $value, $lifetime, $httponly=false) {
 
 	header("Set-Cookie: $name=$value; expires=$expire_date; Max-Age=$lifetime; path=/; SameSite=$samesite;".$secure.$httponly);
 }
+
+// Include backwards compatibility wrapper functions.
+require_once('php_poly_fill.php');

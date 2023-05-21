@@ -23,7 +23,7 @@ $User->check_module_permissions ("nat", User::ACCESS_RW, true, true);
 $User->Crypto->csrf_cookie ("validate", "nat_add", $_POST['csrf_cookie']) === false ? $Result->show("danger", _("Invalid CSRF cookie"), true) : "";
 
 # length
-if(strlen($_POST['ip'])==0)   { $Result->show("danger", _("Please enter IP address"), true); }
+if(is_blank($_POST['ip']))   { $Result->show("danger", _("Please enter IP address"), true); }
 # id
 if(!is_numeric($_POST['id'])) { $Result->show("danger", _("Invalid NAT item ID"), true); }
 # type
@@ -45,8 +45,8 @@ $search_term = str_replace("*", "%", $search_term);
 
 # fetch old details
 $nat = $Tools->fetch_object("nat", "id", $_POST['id']);
-$nat->src = json_decode($nat->src, true);
-$nat->dst = json_decode($nat->dst, true);
+$nat->src = pf_json_decode($nat->src, true);
+$nat->dst = pf_json_decode($nat->dst, true);
 
 // identify
 $type = $Admin->identify_address( $search_term ); //identify address type

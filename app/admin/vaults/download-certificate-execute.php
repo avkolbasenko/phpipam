@@ -39,7 +39,7 @@ if($User->Crypto->decrypt($vault->test, $_SESSION[$vault_id])!="test") {
 
 // fetch item
 $vault_item = $Tools->fetch_object("vaultItems", "id", $_GET['id']);
-$vault_item_values = json_decode($User->Crypto->decrypt($vault_item->values, $_SESSION[$vault_id]));
+$vault_item_values = pf_json_decode($User->Crypto->decrypt($vault_item->values, $_SESSION[$vault_id]));
 
 // check
 if($vault_item_values===false || $vault_item_values===NULL || !isset($vault_item_values)) {
@@ -51,7 +51,7 @@ else {
 }
 
 // no key
-if(strlen(@$_GET['key'])==0) { $_GET['key'] = ""; }
+if(is_blank(@$_GET['key'])) { $_GET['key'] = ""; }
 
 // all ok, proceed
 try {

@@ -224,9 +224,9 @@ class DHCP_kea extends Common_functions {
         // loop and remove comments (contains #) and replace multilpe spaces
         $out   = array();
         foreach ($config as $k=>$f) {
-            if (strpos($f, "#")!==false || strlen($f)==0) {}
+            if (strpos($f, "#")!==false || is_blank($f)) {}
             else {
-                if(strlen($f)>0) {
+                if(!is_blank($f)) {
                     $out[] = $f;
                 }
             }
@@ -241,7 +241,7 @@ class DHCP_kea extends Common_functions {
 		}
 
         // save config
-        $this->config = json_decode($config, true);
+        $this->config = pf_json_decode($config, true);
         // save IPv4 / IPv6 flags
         if(isset($this->config['Dhcp4']))   { $this->ipv4_used = true; }
         if(isset($this->config['Dhcp6']))   { $this->ipv6_used = true; }
@@ -323,7 +323,7 @@ class DHCP_kea extends Common_functions {
             foreach ($leases_from_file as $l) {
                 if(strlen($l)>1) {
                     // to array
-                    $l = explode(",", $l);
+                    $l = pf_explode(",", $l);
 
                     // set state
                     switch ($l[9]) {
@@ -374,7 +374,7 @@ class DHCP_kea extends Common_functions {
      */
     private function get_leases_mysql ($lease_database, $type) {
         // if host not specified assume localhost
-        if (strlen($lease_database['host'])==0) { $lease_database['host'] = "localhost"; }
+        if (is_blank($lease_database['host'])) { $lease_database['host'] = "localhost"; }
         // open DB connection
         $this->init_database_conection ($lease_database['user'], $lease_database['password'], $lease_database['host'], 3306, $lease_database['name']);
         // set query
@@ -466,7 +466,7 @@ class DHCP_kea extends Common_functions {
 
 
         // first check reservations under subnet > reservations, can be both
-        $this->get_reservations_config_file ($type);
+        $this->get_reservations_config_file ($type, $reservations_database);
 
         // if set in config check also database
         if ($reservations_database!==false) {
@@ -492,9 +492,10 @@ class DHCP_kea extends Common_functions {
      *
      * @access private
      * @param mixed $type
+     * @param array $reservations_database
      * @return void
      */
-    private function get_reservations_config_file ($type) {
+    private function get_reservations_config_file ($type, $reservations_database) {
         // read file
         if($type=="IPv4") {
             // check if set
@@ -558,7 +559,7 @@ class DHCP_kea extends Common_functions {
      */
     private function get_reservations_mysql ($reservations_database, $type) {
         // if host not specified assume localhost
-        if (strlen($reservations_database['host'])==0) { $reservations_database['host'] = "localhost"; }
+        if (is_blank($reservations_database['host'])) { $reservations_database['host'] = "localhost"; }
         // open DB connection
         $this->init_database_conection ($reservations_database['user'], $reservations_database['password'], $reservations_database['host'], 3306, $reservations_database['name']);
         // set query
@@ -580,7 +581,7 @@ class DHCP_kea extends Common_functions {
     		// loop
     		foreach ($reservations as $k=>$l) {
         		// check for subnet
-        		if ($l->dhcp4_subnet_id!==0 && strlen($l->dhcp4_subnet_id)>0) {
+        		if ($l->dhcp4_subnet_id!==0 && !is_blank($l->dhcp4_subnet_id)) {
             		if($type=="IPv4") {
                 		foreach($this->subnets4 as $s) {
                     		if($s['id']==$l->dhcp4_subnet_id) {

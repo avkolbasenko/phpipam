@@ -38,7 +38,7 @@ $zone = $PowerDNS->get_ptr_zone_name ($subnet->ip, $subnet->mask);
 // try to fetch domain
 $domain = $PowerDNS->fetch_domain_by_name ($zone);
 // default values
-$values = json_decode($User->settings->powerDNS, true);
+$values = pf_json_decode($User->settings->powerDNS, true);
 $values['name'] = $zone;
 
 // domain missing, create it and default records
@@ -63,8 +63,8 @@ $hosts   = $Addresses->fetch_subnet_addresses ($subnet->id, "ip_addr", "asc");
 if (is_array($hosts) && sizeof($hosts)>0) {
 	foreach ($hosts as $h) {
     	// set default hostname for PTR if set
-    	if (strlen($h->hostname)==0) {
-        	if (strlen($values['def_ptr_domain'])>0) {
+    	if (is_blank($h->hostname)) {
+        	if (!is_blank($values['def_ptr_domain'])) {
             	$h->hostname = $values['def_ptr_domain'];
         	}
     	}

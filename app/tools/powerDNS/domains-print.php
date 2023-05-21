@@ -36,10 +36,10 @@ switch ($type) {
 }
 
 // if serach blank unset
-if (strlen(@$_POST['domain-filter']) == 0) {unset($_POST['domain-filter']);}
+if (is_blank(@$_POST['domain-filter'])) {unset($_POST['domain-filter']);}
 
 // if search filter out hits
-if ($_GET['sPage'] == "search" && strlen(@$_POST['domain-filter']) > 0) {
+if (@$_GET['sPage'] == "search" && !is_blank(@$_POST['domain-filter'])) {
     // loop domains
     foreach ($domains as $k => $d) {
         // search through records, if no hits unset
@@ -114,7 +114,7 @@ elseif ($domains === false) {$Result->show("info alert-absolute", _("No domains 
 foreach ($domains as $d) {
     // nulls
     foreach ($d as $k => $v) {
-        if (strlen($v) == 0) {
+        if (is_blank($v)) {
             $d->$k = "<span class='muted'>/</span>";
         }
 
@@ -123,7 +123,7 @@ foreach ($domains as $d) {
     $cnt = $PowerDNS->count_domain_records($d->id);
     // get SOA record
     $soa = $PowerDNS->fetch_domain_records_by_type($d->id, "SOA");
-    $serial = explode(" ", $soa[0]->content);
+    $serial = pf_explode(" ", $soa[0]->content);
     $serial = $serial[2];
 
     print "<tr>";

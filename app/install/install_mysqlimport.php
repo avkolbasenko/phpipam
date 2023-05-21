@@ -18,7 +18,7 @@ $filename	  = @$_GET['subnetId']=="migrate" ? "MIGRATE" : "SCHEMA";
 		<a href="<?php print create_link("install"); ?>" class="btn btn-sm btn-default"><i class='fa fa-angle-left'></i> <?php print _("Back"); ?></a>
 		<!-- Instructions -->
 		<div style="margin-top:10px;padding:30px 20px;">
-			<?php print _("Please follow below steps for")." ".$title_prefix." "._("with mysqlimport:"); ?><hr>
+			<?php print _("Please follow the steps below for")." ".$title_prefix." "._("with mysqlimport:"); ?><hr>
 			<ol>
 				<li><?php print _("Set variables for database connection in config.php"); ?></li>
 				<li><?php print _("Open mysql connection"); ?>
@@ -27,12 +27,12 @@ Enter password:</pre>
 				</li>
 
 				<li><?php print _("Create database"); ?>
-					<pre>CREATE DATABASE `<?php print $db['name']; ?>`;
+					<pre>CREATE DATABASE `<?php print escape_input($db['name']); ?>`;
 exit</pre>
 				</li>
 
 				<li><?php print _("Import SQL file"); ?>
-					<pre>mysql -u root -p <?php print $db['name']; ?> &lt; db/<?php print $filename;?>.sql</pre>
+					<pre>mysql -u root -p <?php print escape_input($db['name']); ?> &lt; db/<?php print $filename;?>.sql</pre>
 				</li>
 
 				<?php
@@ -50,18 +50,20 @@ exit</pre>
 
 				<li><?php print _("Set permissions for phpipam user"); ?>
 				<pre><?php
-					$esc_user = addcslashes($db['user'],"'");
-					$esc_pass = addcslashes($db['pass'],"'");
-					$db_name  = $db['name'];
-					$webhost  = is_string($db['webhost']) && strlen($db['webhost']) > 0 ? addcslashes($db['webhost'],"'") : 'localhost';
+					$esc_user = escape_input($db['user']);
+					$esc_pass = escape_input(_("<YOUR SECRET PASSWORD FROM config.php>"));
+					$esc_webhost = is_string($db['webhost']) && strlen($db['webhost']) ? escape_input($db['webhost']) : 'localhost';
+					$db_name  = escape_input($db['name']);
 
-					print "CREATE USER '$esc_user'@'$webhost' IDENTIFIED BY '$esc_pass'; <br>";
-					print "GRANT ALL ON `$db_name`.* TO '$esc_user'@'$webhost'; <br>";
+					print "# Set permissions for phpipam user <br>";
+					print "# ------------------------------------------------------------ <br>";
+					print "CREATE USER '$esc_user'@'$esc_webhost' IDENTIFIED BY '$esc_pass'; <br>";
+					print "GRANT ALL ON $db_name.* TO '$esc_user'@'$esc_webhost'; <br>";
 					print "FLUSH PRIVILEGES; <br>";
 				?></pre>
 				</li>
 
-				<li><?php print _("Finished ! Now login with <strong>Admin/ipamadmin</strong> to webpage."); ?><br>
+				<li><?php print _("Finished ! Now log in with <strong>Admin/ipamadmin</strong> to web page."); ?><br>
 				<a href="<?php print create_link(null,null,null,null,null,true); ?>" class="btn btn-sm btn-info"><?php print _("Login"); ?></a>
 				</li>
 				<?php } ?>

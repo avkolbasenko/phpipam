@@ -22,14 +22,14 @@ $User->check_user_session();
 $auth_settings = $Admin->fetch_object ("usersAuthMethod", "id", $_POST['id']);
 if($auth_settings===false)	{ $Result->show("danger", _("Invalid ID"), true, true); }
 //set params
-$parameters = json_decode($auth_settings->params);
+$parameters = pf_json_decode($auth_settings->params);
 
 # AD?
 if($auth_settings->type=="AD" || $auth_settings->type=="LDAP" || $auth_settings->type=="NetIQ") {
 	# adLDAP function
 	include (dirname(__FILE__) . "/../../../functions/adLDAP/src/adLDAP.php");
 	# set controllers
-	$controllers = explode(";", str_replace(" ", "", $parameters->domain_controllers));
+	$controllers = pf_explode(";", str_replace(" ", "", $parameters->domain_controllers));
 
 	//open connection
 	try {

@@ -38,7 +38,7 @@ $custom_fields = $Tools->fetch_custom_fields ('ipaddresses');
 
 
 # Create a workbook
-$filename = isset($_GET['filename'])&&strlen(@$_GET['filename'])>0 ? $_GET['filename'] : "phpipam_subnet_export.xls";
+$filename = isset($_GET['filename'])&&!is_blank(@$_GET['filename']) ? $_GET['filename'] : "phpipam_subnet_export.xls";
 $workbook = new Spreadsheet_Excel_Writer();
 $workbook->setVersion(8);
 
@@ -89,7 +89,7 @@ $lineCount++;
 $vlan = $Tools->fetch_object("vlans", "vlanId", $subnet['vlanId']);
 if($vlan!=false) {
 	$vlan = (array) $vlan;
-	$vlan_text = strlen($vlan['name'])>0 ? "vlan: $vlan[number] - $vlan[name]" : "vlan: $vlan[number]";
+	$vlan_text = !is_blank($vlan['name']) ? "vlan: $vlan[number] - $vlan[name]" : "vlan: $vlan[number]";
 
 	$worksheet->write($lineCount, $rowCount, $vlan_text, $format_vlan );
 	$lineCount++;
@@ -196,8 +196,8 @@ foreach ($addresses as $ip) {
 	$rowCount = 0;
 
 	//change switch ID to name
-	$ip['switch']   = is_null($ip['switch'])||strlen($ip['switch'])==0||$ip['switch']==0||!isset($devices_indexed[$ip['switch']]) ? "" : $devices_indexed[$ip['switch']]->hostname;
-	$ip['location'] = is_null($ip['location'])||strlen($ip['location'])==0||$ip['location']==0||!isset($locations_indexed[$ip['location']]) ? "" : $locations_indexed[$ip['location']]->name;
+	$ip['switch']   = is_null($ip['switch'])||is_blank($ip['switch'])||$ip['switch']==0||!isset($devices_indexed[$ip['switch']]) ? "" : $devices_indexed[$ip['switch']]->hostname;
+	$ip['location'] = is_null($ip['location'])||is_blank($ip['location'])||$ip['location']==0||!isset($locations_indexed[$ip['location']]) ? "" : $locations_indexed[$ip['location']]->name;
 
 	if( (isset($_GET['ip_addr'])) && ($_GET['ip_addr'] == "on") ) {
 		$worksheet->write($lineCount, $rowCount, $Subnets->transform_address($ip['ip_addr'],"dotted"), $format_left);

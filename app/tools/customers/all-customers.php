@@ -23,8 +23,10 @@ $_GET = $User->strip_input_tags ($_GET);
 # get custom fields
 $custom_fields = $Tools->fetch_custom_fields('customers');
 # get hidden fields */
-$hidden_fields = json_decode($User->settings->hiddenCustomFields, true);
+$hidden_fields = pf_json_decode($User->settings->hiddenCustomFields, true);
 $hidden_fields = is_array(@$hidden_fields['customers']) ? $hidden_fields['customers'] : array();
+
+$colspanCustom = 0;
 
 # title
 print "<h4>"._('All customers')."</h4>";
@@ -74,7 +76,7 @@ else {
 		print "	<td><strong><a class='btn btn-sm btn-default' href='".create_link($_GET['page'],"customers",$customer->title)."'>$customer->title</a></strong></td>";
 		print "	<td>$customer->address, $customer->postcode $customer->city, $customer->state</td>";
 		// contact
-		if(strlen($customer->contact_person)>0)
+		if(!is_blank($customer->contact_person))
 		print " <td><a href='mailto:$customer->contact_mail'>$customer->contact_person</a> ($customer->contact_phone)</td>";
 		else
 		print " <td><span class='muted'>/</span></td>";

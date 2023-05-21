@@ -164,8 +164,8 @@ class Common_functions  {
 	 * @return int
 	 */
 	public function cmp_version_strings($verA, $verB) {
-		$a = array_pad(explode('.', $verA), 3, 0);
-		$b = array_pad(explode('.', $verB), 3, 0);
+		$a = array_pad(pf_explode('.', $verA), 3, 0);
+		$b = array_pad(pf_explode('.', $verB), 3, 0);
 
 		if ($a[0] != $b[0]) return $a[0] < $b[0] ? -1 : 1;			// 1.x.y is less than 2.x.y
 		if (strcmp($a[1], $b[1]) != 0) return strcmp($a[1], $b[1]);	// 1.21.y is less than 1.3.y
@@ -211,7 +211,7 @@ class Common_functions  {
 	 */
 	public function fetch_all_objects ($table=null, $sortField="id", $sortAsc=true) {
 		# null table
-		if(is_null($table)||strlen($table)==0) return false;
+		if(is_null($table)||is_blank($table)) return false;
 
 		$cached_item = $this->cache_check("fetch_all_objects", "t=$table f=$sortField o=$sortAsc");
 		if(is_object($cached_item)) return $cached_item->result;
@@ -246,7 +246,7 @@ class Common_functions  {
 	public function fetch_object ($table, $method, $value) {
 		// checks
 		if(!is_string($table)) return false;
-		if(strlen($table)==0)  return false;
+		if(is_blank($table))  return false;
 		if(is_null($method))   return false;
 		if(is_null($value))    return false;
 		if($value===0)         return false;
@@ -288,7 +288,7 @@ class Common_functions  {
 	 */
 	public function fetch_multiple_objects ($table, $field, $value, $sortField = 'id', $sortAsc = true, $like = false, $result_fields = "*") {
 		# null table
-		if(is_null($table)||strlen($table)==0) return false;
+		if(is_null($table)||is_blank($table)) return false;
 		else {
 			try { $res = $this->Database->findObjects($table, $field, $value, $sortField, $sortAsc, $like, false, $result_fields); }
 			catch (Exception $e) {
@@ -653,13 +653,16 @@ class Common_functions  {
 	}
 
 	/**
-	 * Remove <script>, <iframe> and JS HTML event attributes from HTML to protect from XSS
+	 * Remove common XSS vectors.
+	 * This function is not and will never be 100% effective.
+	 *
+	 * TODO: Switch user instructions to use markdown. Sanitising raw HTML is impossible.
 	 *
 	 * @param   string  $html
 	 * @return  string
 	 */
 	public function noxss_html($html) {
-		if (!is_string($html) || strlen($html)==0)
+		if (!is_string($html) || is_blank($html))
 			return "";
 
 		// Convert encoding to UTF-8
@@ -674,7 +677,7 @@ class Common_functions  {
 			if ($dom->loadHTML("<html>".$html."</html>", LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOBLANKS | LIBXML_NOWARNING | LIBXML_NOERROR) === false)
 				return "";
 
-			$banned_elements = ['script', 'iframe', 'embed'];
+			$banned_elements = ['script', 'iframe', 'embed', 'object'];
 			$remove_elements = [];
 
 			$elements = $dom->getElementsByTagName('*');
@@ -730,7 +733,7 @@ class Common_functions  {
         		$out[$k] = $v;
     		}
     		else {
-    			if(is_null($v) || strlen($v)==0) {
+    			if(is_null($v) || is_blank($v)) {
     				$out[$k] = 	$char;
     			} else {
     				$out[$k] = $v;
@@ -754,7 +757,7 @@ class Common_functions  {
     	// loop
     	if(is_array($fields)) {
 			foreach($fields as $k=>$v) {
-				if(is_null($v) || strlen($v)==0) {
+				if(is_null($v) || is_blank($v)) {
 				}
 				else {
 					$out[$k] = $v;
@@ -798,7 +801,7 @@ class Common_functions  {
 	 * @return string
 	 */
 	public function strip_xss ($input) {
-		return htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
+		return htmlspecialchars($input ?: '', ENT_QUOTES, 'UTF-8');
 	}
 
 	/**
@@ -821,7 +824,7 @@ class Common_functions  {
 	 * @return int|mixed
 	 */
 	public function verify_checkbox ($field) {
-		return (!isset($field) || strlen($field)==0) ? 0 : escape_input($field);
+		return (!isset($field) || is_blank($field)) ? 0 : escape_input($field);
 	}
 
 	/**
@@ -882,7 +885,7 @@ class Common_functions  {
 			if ($req == "mac")
 				$req = strtr($req, ':', '-'); # Mac-addresses, replace Colon U+003A with hyphen U+002D
 
-			if (strpos($req, ':')!==false)
+			if (is_string($req) && strpos($req, ':')!==false)
 				$req = strtr($req, ':', '.'); # Default, replace Colon U+003A with Full Stop U+002E.
 
 			$result .= ($changelog===true) ? "[$key]: $req<br>" : " ". $key . ": " . $req . "<br>";
@@ -903,7 +906,7 @@ class Common_functions  {
 	    $hms = "";
 
 	    // get the number of hours
-	    $hours = intval(intval($sec) / 3600);
+	    $hours = intval($sec / 3600);
 
 	    // add to $hms, with a leading 0 if asked for
 	    $hms .= ($padHours)
@@ -911,13 +914,13 @@ class Common_functions  {
 	          : $hours. ':';
 
 	    // get the seconds
-	    $minutes = intval(($sec / 60) % 60);
+	    $minutes = intval($sec / 60) % 60;
 
 	    // then add to $hms (with a leading 0 if needed)
 	    $hms .= str_pad($minutes, 2, "0", STR_PAD_LEFT). ':';
 
 	    // seconds
-	    $seconds = intval($sec % 60);
+	    $seconds = intval($sec) % 60;
 
 	    // add to $hms, again with a leading 0 if needed
 	    $hms .= str_pad($seconds, 2, "0", STR_PAD_LEFT);
@@ -935,6 +938,9 @@ class Common_functions  {
 	 * @return mixed
 	 */
 	public function shorten_text($text, $chars = 25) {
+		if (is_blank($text))
+			return '';
+
 		// minimum length = 8
 		if ($chars < 8) $chars = 8;
 		// count input text size
@@ -1086,11 +1092,14 @@ class Common_functions  {
 	 *	source: https://css-tricks.com/snippets/php/find-urls-in-text-make-links/
 	 *
 	 * @access public
-	 * @param mixed $field_type
-	 * @param mixed $text
-	 * @return mixed
+ 	 * @param string $text
+	 * @param string $field_type
+	 * @return string
 	 */
 	public function create_links ($text, $field_type = "varchar") {
+		if (!is_string($text))
+			return '';
+
 		// create links only for varchar fields
 		if (strpos($field_type, "varchar")!==false) {
 			// regular expression
@@ -1201,7 +1210,7 @@ class Common_functions  {
     	// first put it to common format (1)
     	$mac = $this->reformat_mac_address ($mac);
     	// we permit empty
-        if (strlen($mac)==0)                                                            { return true; }
+        if (is_blank($mac))                                                            { return true; }
     	elseif (preg_match('/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/', $mac) != 1)   { return false; }
     	else                                                                            { return true; }
 	}
@@ -1215,7 +1224,7 @@ class Common_functions  {
      */
     public function validate_json_string($string) {
         // try to decode
-        json_decode($string);
+        pf_json_decode($string);
         // check for error
         $parse_result = json_last_error_msg();
         // save possible error
@@ -1573,7 +1582,7 @@ class Common_functions  {
 		$html = array();
     	//parse values
     	$field['type'] = trim(substr($field['type'],0,-1));
-    	$tmp = substr($field['type'], 0,3)=="set" ? explode(",", str_replace(array("set(", "'"), "", $field['type'])) : explode(",", str_replace(array("enum(", "'"), "", $field['type']));
+    	$tmp = substr($field['type'], 0,3)=="set" ? pf_explode(",", str_replace(array("set(", "'"), "", $field['type'])) : pf_explode(",", str_replace(array("enum(", "'"), "", $field['type']));
     	//null
     	if($field['Null']!="NO") { array_unshift($tmp, ""); }
 
@@ -1582,7 +1591,7 @@ class Common_functions  {
     		// set selected
 			$selected = $v==$object->{$field['name']} ? "selected='selected'" : "";
 			// parse delimiter
-			if(strlen($set_delimiter)==0) {
+			if(is_blank($set_delimiter)) {
 				// save
 		        $html[] = "<option value='$v' $selected>$v</option>";
 			}
@@ -1660,7 +1669,7 @@ class Common_functions  {
     	if($field['Null']!="NO") { $tmp[2] = ""; }
 
     	foreach($tmp as $k=>$v) {
-    		if(strlen($object->{$field['name']})==0 && $k==2)	{ $html[] = "<option value='$k' selected='selected'>"._($v)."</option>"; }
+    		if(is_blank($object->{$field['name']}) && $k==2)	{ $html[] = "<option value='$k' selected='selected'>"._($v)."</option>"; }
     		elseif($k==$object->{$field['name']})				{ $html[] = "<option value='$k' selected='selected'>"._($v)."</option>"; }
     		else											    { $html[] = "<option value='$k'>"._($v)."</option>"; }
     	}
@@ -1724,8 +1733,6 @@ class Common_functions  {
 	 * @return void
 	 */
 	public function print_custom_field ($type, $value, $delimiter = false, $replacement = false) {
-		// escape
-		$value = str_replace("'", "&#39;", $value);
 		// create links
 		$value = $this->create_links ($value, $type);
 
@@ -1737,12 +1744,12 @@ class Common_functions  {
 		//booleans
 		if($type=="tinyint(1)")	{
 			if($value == "1")			{ print _("Yes"); }
-			elseif(strlen($value)==0) 	{ print "/"; }
+			elseif(is_blank($value)) 	{ print "/"; }
 			else						{ print _("No"); }
 		}
 		//text
 		elseif($type=="text") {
-			if(strlen($value)>0)	{ print "<i class='fa fa-gray fa-comment' rel='tooltip' data-container='body' data-html='true' title='".str_replace("\n", "<br>", $value)."'>"; }
+			if(!is_blank($value))	{ print "<i class='fa fa-gray fa-comment' rel='tooltip' data-container='body' data-html='true' title='".str_replace("\n", "<br>", escape_input($value))."'>"; }
 			else					{ print ""; }
 		}
 		else {
@@ -1829,13 +1836,13 @@ class Common_functions  {
 			// Unique MAC address: 45344
 			// Updated: 12 March 2022
 			$data = file_get_contents(dirname(__FILE__) . "/../vendormacs.json");
-			$this->mac_address_vendors = json_decode($data, true);
+			$this->mac_address_vendors = pf_json_decode($data, true);
 		}
 
 		// Find longest prefix match in $this->mac_address_vendors array (max 9)
 		$search_mac = substr($this->reformat_mac_address($mac, 4), 0, 9);
 
-		while (strlen($search_mac) > 0) {
+		while (!is_blank($search_mac)) {
 			if (isset($this->mac_address_vendors[$search_mac])) {
 				$prefix = implode(":", str_split(strtoupper($search_mac), 2));
 				return $this->mac_address_vendors[$search_mac];
@@ -2116,7 +2123,7 @@ class Common_functions  {
                         	$title[] = $sn->description;
                     	}
                     	else {
-                        	$sn->description = strlen($sn->description)>0 ? " (".$sn->description.")" : "";
+                        	$sn->description = !is_blank($sn->description) ? " (".$sn->description.")" : "";
                         	$title[] = $this->transform_address($sn->subnet, "dotted")."/".$sn->mask.$sn->description;
                         }
                 	}

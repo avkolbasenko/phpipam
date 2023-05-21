@@ -16,7 +16,7 @@ $all_vrfs = $User->fetch_all_objects("vrf", "name");
 $custom = $Tools->fetch_custom_fields('vrf');
 
 # set hidden fields
-$hidden_fields = json_decode($User->settings->hiddenCustomFields, true);
+$hidden_fields = pf_json_decode($User->settings->hiddenCustomFields, true);
 $hidden_fields = is_array(@$hidden_fields['vrf']) ? $hidden_fields['vrf'] : array();
 
 # set size of custom fields
@@ -73,13 +73,13 @@ else {
 		$vrf = (array) $vrf;
 
     	// format sections
-    	if(strlen($vrf['sections'])==0) {
+    	if(is_blank($vrf['sections'])) {
     		$sections = "All sections";
     	}
     	else {
     		//explode
     		$sec = [];
-    		$sections_tmp = explode(";", $vrf['sections']);
+    		$sections_tmp = pf_explode(";", $vrf['sections']);
     		foreach($sections_tmp as $t) {
     			//fetch section
     			$tmp_section = $Sections->fetch_section(null, $t);

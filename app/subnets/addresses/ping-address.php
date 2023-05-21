@@ -27,7 +27,7 @@ $tagChange = false;
 # validate post
 is_numeric($_POST['subnetId']) ?:							$Result->show("danger", _("Invalid ID"), true, true, false, true);
 if(is_numeric($_POST['id'])) {
-	strlen($_POST['id'])!=0 ?:								$Result->show("danger", _("Invalid ID"), true, true, false, true);
+	!is_blank($_POST['id']) ?:								$Result->show("danger", _("Invalid ID"), true, true, false, true);
 	# fetch address
 	$address = (array) $Addresses->fetch_address(null, $_POST['id']);
 }
@@ -100,7 +100,7 @@ if ($Ping->settings->updateTags==1 && $Subnets->address_types[$address['state']]
 <!-- footer -->
 <div class="pFooter">
 	<div class="btn-group">
-		<a class='ping_ipaddress btn btn-sm btn-default' data-subnetId='<?php print $_POST['subnetId']; ?>' data-id='<?php print $_POST['id']; ?>' href='#'><i class='fa fa-gray fa-cogs'></i> <?php print _('Repeat'); ?></a>
+		<a class='ping_ipaddress btn btn-sm btn-default' data-subnetId='<?php print escape_input($_POST['subnetId']); ?>' data-id='<?php print escape_input($_POST['id']); ?>' href='#'><i class='fa fa-gray fa-cogs'></i> <?php print _('Repeat'); ?></a>
 		<button class="btn btn-sm btn-default hidePopup2"><?php print _('Close window'); ?></button>
 	</div>
 </div>

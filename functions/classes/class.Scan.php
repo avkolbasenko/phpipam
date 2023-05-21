@@ -72,6 +72,41 @@ class Scan extends Common_functions {
 	protected $icmp_exit = false;
 
 	/**
+	 * Scan type
+	 *
+	 * @var string
+	 */
+	private $ping_type;
+
+	/**
+	 * ping binary path
+	 *
+	 * @var string
+	 */
+	private $ping_path;
+
+	/**
+	 * fping binary path
+	 *
+	 * @var string
+	 */
+	private $fping_path;
+
+	/**
+	 * last fping result
+	 *
+	 * @var array
+	 */
+	public $fping_result = [];
+
+	/**
+	 * Ping RTT
+	 *
+	 * @var integer
+	 */
+	public $rtt;
+
+	/**
 	 * Database
 	 *
 	 * @var mixed
@@ -299,7 +334,7 @@ class Scan extends Common_functions {
 
         # for IPv6 remove wait
         if ($this->identify_address ($address)=="IPv6") {
-            $cmd = explode(" ", $cmd);
+            $cmd = pf_explode(" ", $cmd);
             unset($cmd[3], $cmd[4]);
             $cmd = implode(" ", $cmd);
         }
@@ -418,10 +453,11 @@ class Scan extends Common_functions {
 	 */
 	private function save_fping_rtt ($line) {
 		// 173.192.112.30 : xmt/rcv/%loss = 1/1/0%, min/avg/max = 160/160/160
- 		$tmp = explode(" ",$line);
+ 		$tmp = pf_explode(" ",$line);
 
  		# save rtt
-		@$this->rtt	= "RTT: ".str_replace("(", "", $tmp[7]);
+		if (is_array($tmp) && isset($tmp[7]))
+			$this->rtt	= "RTT: ".str_replace("(", "", $tmp[7]);
 	}
 
 	/**
@@ -457,7 +493,7 @@ class Scan extends Common_functions {
 				if (!$match || $matches[1] == 100)
 					continue;
 
-				$tmp = explode(" ", $line);
+				$tmp = pf_explode(" ", $line);
 				$out[] = $tmp[0];
 			}
 		}
@@ -658,17 +694,14 @@ class Scan extends Common_functions {
 	 */
 	public function telnet_address ($address, $port) {
 		# set all ports
-		$ports = explode(",", str_replace(";",",",$port));
+		$ports = pf_explode(",", str_replace(";",",",$port));
 		# default response is dead
 		$retval = 1;
 		//try each port untill one is alive
 		foreach($ports as $p) {
 			// open socket
 			$conn = @fsockopen($address, $p, $errno, $errstr, $this->icmp_timeout);
-			//failed
-			if (!$conn) {}
-			//success
-			else 		{
+			if ($conn !== false) {
 				$retval = 0;	//set return as port if alive
 				fclose($conn);
 				break;			//end foreach if success

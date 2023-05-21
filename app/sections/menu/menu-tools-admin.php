@@ -84,7 +84,7 @@ if($User->is_admin(false)) {
 <ul class="nav navbar-nav navbar-right hidden-xs hidden-sm icon-ul">
 
 	<!-- Dash lock/unlock -->
-	<?php if($_GET['page']=="dashboard" && !($User->is_admin(false)!==true && (strlen($User->user->groups)==0 || $User->user->groups==="null") ) ) { ?>
+	<?php if($_GET['page']=="dashboard" && !($User->is_admin(false)!==true && (is_blank($User->user->groups) || $User->user->groups==="null") ) ) { ?>
 		<li class="w-lock">
 			<a href="#" rel='tooltip' class="icon-li" data-placement='bottom' title="<?php print _('Click to reorder widgets'); ?>"><i class='fa fa-dashboard'></i></a>
 		</li>
@@ -98,7 +98,7 @@ if($User->is_admin(false)) {
 	<!-- Favourites -->
 	<?php
 	//check if user has favourite subnets
-	if(strlen(trim($User->user->favourite_subnets))>0) {
+	if(!is_blank(trim($User->user->favourite_subnets ?: ''))) {
 	?>
 	<li class="<?php if($_GET['section']=="favourites") print " active"; ?>">
 		<a href="<?php print create_link("tools","favourites"); ?>" class="icon-li" rel='tooltip' data-placement='bottom' title="<?php print _('Favourite networks'); ?>"><i class='fa fa-star-o'></i></a>

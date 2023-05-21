@@ -30,11 +30,11 @@ if(!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL))							{ $Result->show("d
 if(!is_numeric($_POST['lang']))                                                 { $Result->show("danger alert-absolute",  _('Invalid language!'), true); }
 
 # verify password if changed (not empty)
-if (strlen($_POST['password1']) != 0) {
+if (!is_blank($_POST['password1'])) {
 	if ($_POST['password1'] != $_POST['password2']) 							{ $Result->show("danger alert-absolute", _('Passwords do not match!'), true); }
 	# validate pass against policy
-	$policy = (json_decode($User->settings->passwordPolicy, true));
-	$Password_check->set_requirements  ($policy, explode(",",$policy['allowedSymbols']));
+	$policy = (pf_json_decode($User->settings->passwordPolicy, true));
+	$Password_check->set_requirements  ($policy, pf_explode(",",$policy['allowedSymbols']));
 	if (!$Password_check->validate ($_POST['password1'])) 						{ $Result->show("danger alert-danger ", _('Password validation errors').":<br> - ".implode("<br> - ", $Password_check->get_errors ()), true); }
 }
 

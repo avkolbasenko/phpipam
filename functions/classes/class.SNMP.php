@@ -296,8 +296,8 @@ class phpipamSNMP extends Common_functions {
 	private function snmp_poll ($type, $oid, $index) {
 		// Convert to numerical OIDs.
 		$oid_num   = isset($this->snmp_oids[$oid]) ? $this->snmp_oids[$oid] : $oid;
-		$query     = strlen($index) == 0 ? $oid     : $oid.'.'.$index;
-		$query_num = strlen($index) == 0 ? $oid_num : $oid_num.'.'.$index;
+		$query     = is_blank($index) ? $oid     : $oid.'.'.$index;
+		$query_num = is_blank($index) ? $oid_num : $oid_num.'.'.$index;
 
 		// try
 		try {
@@ -378,7 +378,7 @@ class phpipamSNMP extends Common_functions {
 	 * @return void
 	 */
 	private function set_snmp_hostname ($hostname) {
-    	if (strlen($hostname)>0) {
+    	if (!is_blank($hostname)) {
         	$this->snmp_hostname = $hostname;
     	}
 	}
@@ -392,7 +392,7 @@ class phpipamSNMP extends Common_functions {
 	 * @return void
 	 */
 	private function set_snmp_community ($community, $vlan_number) {
-    	if (strlen($community)>0) {
+    	if (!is_blank($community)) {
         	// vlan ?
         	if ($vlan_number!==false && is_numeric($vlan_number)) {
                 $this->snmp_community = $community."@".$vlan_number;
@@ -767,7 +767,7 @@ class phpipamSNMP extends Common_functions {
         foreach ($res1 as $k=>$r) {
             // set number
             $k = str_replace($this->snmp_oids['CISCO-VTP-MIB::vtpVlanName'].'.1.', "", $k);
-            $k = array_pop(explode(".", $k));
+            $k = array_pop(pf_explode(".", $k));
             // set value
             $r  = trim(str_replace("\"","",substr($r, strpos($r, ":")+2)));
             $res[$k] = $r;
@@ -790,7 +790,7 @@ class phpipamSNMP extends Common_functions {
         // the first octet is the string length, and subsequent octets are
         // the ASCII codes of each character.
         // For example, “vpn1” is represented as 4.118.112.110.49.
-        $a = array_values(array_filter(explode('.', $oid)));
+        $a = array_values(array_filter(pf_explode('.', $oid)));
         if (($a[0]+1) != sizeof($a))
             return $oid;
 

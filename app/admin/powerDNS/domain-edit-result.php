@@ -41,11 +41,11 @@ if ($_POST['action']!="delete") {
 	if ($_POST['action']=="add")
 	if($Tools->validate_hostname($_POST['name'])===false)			{ $Result->show("danger", _("Invalid domain name"), true); }
 	// master
-	if (strlen($_POST['master'])>0) {
+	if (!is_blank($_POST['master'])) {
     	// if multilpe masters
     	if (strpos($_POST['master'], ",")!==false) {
         	// to array and trim, check each
-        	$masters = array_filter(explode(",", $_POST['master']));
+        	$masters = array_filter(pf_explode(",", $_POST['master']));
         	foreach ($masters as $m) {
               if(!filter_var($m, FILTER_VALIDATE_IP))  { $Result->show("danger", _("Master must be an IP address"). " - ". $m, true); }
         	}
@@ -64,11 +64,11 @@ if ($_POST['action']!="delete") {
 
 	// if slave master must be present
 	if ($_POST['type']=="SLAVE") {
-    	if (strlen($_POST['master'])==0) { $Result->show("danger", _("Please set master server(s) if domain type is SLAVE"), true); }
+    	if (is_blank($_POST['master'])) { $Result->show("danger", _("Please set master server(s) if domain type is SLAVE"), true); }
         else {
         	if (strpos($_POST['master'], ",")!==false) {
             	// to array and trim, check each
-            	$masters = array_filter(explode(",", $_POST['master']));
+            	$masters = array_filter(pf_explode(",", $_POST['master']));
             	foreach ($masters as $m) {
                   if(!filter_var($m, FILTER_VALIDATE_IP))  { $Result->show("danger", _("Master must be an IP address"). " - ". $m, true); }
             	}

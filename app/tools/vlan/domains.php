@@ -51,13 +51,13 @@ foreach($vlan_domains as $domain) {
 	if($domain->id==1) {
 		$sections = "All sections";
 	}
-	elseif(strlen(@$domain->permissions==0)) {
+	elseif(is_blank(@$domain->permissions)) {
 		$sections = "None";
 	}
 	else {
 		//explode
 		unset($sec);
-		$sections_tmp = explode(";", $domain->permissions);
+		$sections_tmp = pf_explode(";", $domain->permissions);
 		foreach($sections_tmp as $t) {
 			//fetch section
 			$tmp_section = $Sections->fetch_section(null, $t);

@@ -27,7 +27,7 @@ $User->check_user_session();
 $_POST = $User->strip_input_tags ($_POST);
 
 # get hidden custom fields from settings
-$filters = json_decode($User->settings->hiddenCustomFields, true);
+$filters = pf_json_decode($User->settings->hiddenCustomFields, true);
 isset($filters[$_POST['table']]) ? : $filters[$_POST['table']] = array();
 
 # fetch custom fields
@@ -59,7 +59,7 @@ $(".input-switch").bootstrapSwitch(switch_options);
 	<form id="editCustomFieldsFilter">
 	<table id="editCustomFields" class="table table-noborder table-condensed">
 
-	<input type="hidden" name="table" value="<?php print $_POST['table']; ?>">
+	<input type="hidden" name="table" value="<?php print escape_input($_POST['table']); ?>">
 
 	<?php
 	foreach($custom as $k=>$c) {

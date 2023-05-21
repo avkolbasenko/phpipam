@@ -47,7 +47,7 @@ if($_POST['action']=="add") {
 elseif($_POST['action']=="edit") {
 	if(openssl_x509_parse(base64_decode($_POST['certificate']))===false) {
 		$vault_item = $Tools->fetch_object("vaultItems", "id", $_POST['id']);
-		$vault_item_values = json_decode($User->Crypto->decrypt($vault_item->values, $_SESSION['vault'.$_POST['vaultId']]));
+		$vault_item_values = pf_json_decode($User->Crypto->decrypt($vault_item->values, $_SESSION['vault'.$_POST['vaultId']]));
 		$_POST['certificate'] = $vault_item_values->certificate;
 	}
 }
@@ -73,7 +73,7 @@ else {
 					];
 
 	# remove certificate if not present
-	if($_POST['action']!="delete" && strlen($_POST['certificate'])==0) {
+	if($_POST['action']!="delete" && is_blank($_POST['certificate'])) {
 		$Result->show("danger", _("Invalid certificate"), true);
 	}
 

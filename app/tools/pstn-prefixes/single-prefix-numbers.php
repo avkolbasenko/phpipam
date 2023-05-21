@@ -75,7 +75,7 @@ $colspan_dhcp = 4;
             $device = $device===false ? "/" : "<a href='".create_link("tools", "devices", $device->id)."'>$device->hostname</a>";
 
             # format description
-            $description = strlen($n->description)==0 ? "" : "<i class='fa fa-comment-o' rel='tooltip' title='$n->description'></i>";
+            $description = is_blank($n->description) ? "" : "<i class='fa fa-comment-o' rel='tooltip' title='$n->description'></i>";
 
             # search for free numbers at beginning
             if($User->user->hideFreeRange!=1) {
@@ -139,7 +139,7 @@ $colspan_dhcp = 4;
 					}
 					//text
 					elseif($myField['type']=="text") {
-						if(strlen($n->{$myField['name']})>0)	{ print "<i class='fa fa-gray fa-comment' rel='tooltip' data-container='body' data-html='true' title='".str_replace("\n", "<br>", $n->{$myField['name']})."'>"; }
+						if(!is_blank($n->{$myField['name']}))	{ print "<i class='fa fa-gray fa-comment' rel='tooltip' data-container='body' data-html='true' title='".str_replace("\n", "<br>", $n->{$myField['name']})."'>"; }
 						else									{ print ""; }
 					}
 					else {

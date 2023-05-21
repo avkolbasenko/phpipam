@@ -28,9 +28,10 @@ class Addresses_controller extends Common_api_functions  {
 	 * __construct function
 	 *
 	 * @access public
-	 * @param class $Database
-	 * @param class $Tools
-	 * @param mixed $params		// post/get values
+	 * @param PDO_Database $Database
+	 * @param Tools $Tools
+	 * @param API_params $params
+	 * @param Response $response
 	 */
 	public function __construct($Database, $Tools, $params, $Response) {
 		$this->Database = $Database;
@@ -586,7 +587,7 @@ class Addresses_controller extends Common_api_functions  {
 	 */
 	private function validate_create_update_common () {
 		//validate and normalize MAC address
-		if(strlen($this->_params->mac)>0) {
+		if(!is_blank($this->_params->mac)) {
 			if($this->validate_mac ($this->_params->mac)===false)
 				$this->Response->throw_exception(400, "Invalid MAC address");
 			// normalize

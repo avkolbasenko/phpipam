@@ -63,7 +63,7 @@ else {
         $_POST['subnetId'] = $_POST['freespaceMSID'];
     }
 	# for selecting master subnet if added from subnet details and slave inheritance!
-	if(strlen($_POST['subnetId']) > 0) {
+	if(!is_blank($_POST['subnetId'])) {
     	$subnet_old_temp = (array) $Subnets->fetch_subnet(null, $_POST['subnetId']);
     	$subnet_old_details['masterSubnetId'] 	= @$subnet_old_temp['id'];                // same master subnet ID for nested
     	// slave subnet inheritance
@@ -181,12 +181,12 @@ $("input[name='subnet']").change(function() {
         	if (isset($subnet_old_temp['subnet'])&&$subnet_old_temp['isFolder']!="1")	{ $cidr = $Subnets->transform_to_dotted($subnet_old_temp['subnet']).'/'.($subnet_old_temp['mask']+1);} 		//for nested
         	if (isset($subnet_old_temp['subnet']) && ($showDropMenuFull)) 				{ $dropdown_menu = $Subnets->subnet_dropdown_print_available($_POST['sectionId'], $_POST['subnetId']);  }
 
-        	if (@$_POST['location'] == "ipcalc") 	{ $cidr = strlen($_POST['bitmask'])>0 ? $_POST['subnet'].'/'.$_POST['bitmask'] : $_POST['subnet']; }  														//from ipcalc
+        	if (@$_POST['location'] == "ipcalc") 	{ $cidr = !is_blank($_POST['bitmask']) ? $_POST['subnet'].'/'.$_POST['bitmask'] : $_POST['subnet']; }  														//from ipcalc
             if ($_POST['action'] != "add") 			{ $cidr = $Subnets->transform_to_dotted($subnet_old_details['subnet']).'/'.$subnet_old_details['mask']; } 	//editing existing
 
         	# reset CIDR if $showDropMenuFull
         	// if ($showDropMenuFull && strlen(@$dropdown_menu)>2) {
-	        // 	$cidr = explode("\n",$dropdown_menu);
+	        // 	$cidr = pf_explode("\n",$dropdown_menu);
 	        // 	$cidr = substr(strip_tags($cidr[1]), 2);
 	        // 	//validate
 	        // 	if ($Subnets->verify_cidr_address($cidr)===false) { unset($cidr); };
@@ -199,7 +199,7 @@ $("input[name='subnet']").change(function() {
             <?php } else { ?>
 			<div class="input-group input-w-200">
 				<input type="text" class="form-control input-sm input-w-200" name="subnet" placeholder="<?php print _('subnet in CIDR'); ?>" value="<?php print @$cidr; ?>">
-				<?php if (strlen($dropdown_menu)>0) { ?>
+				<?php if (!is_blank($dropdown_menu)) { ?>
 				<div class="input-group-btn">
 					<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><?php print _("Select"); ?> <span class="caret"></span></button>
 					<ul class="dropdown-menu dropdown-menu-right dropdown-subnets">
@@ -279,7 +279,7 @@ $("input[name='subnet']").change(function() {
 				if ($devices!==false) {
 					foreach($devices as $device) {
 						//check if permitted in this section!
-						$sections = explode(";", $device->sections);
+						$sections = pf_explode(";", $device->sections);
 						if(in_array($_POST['sectionId'], $sections)) {
 							//if same
 							if($device->id == @$subnet_old_details['device']) 	{ print '<option value="'. $device->id .'" selected>'. $device->hostname .'</option>'. "\n"; }
@@ -337,13 +337,13 @@ $("input[name='subnet']").change(function() {
         if($vrfs!=false) {
 	        foreach($vrfs as $vrf) {
     	        // set permitted
-    	        $permitted_sections = explode(";", $vrf->sections);
+    	        $permitted_sections = pf_explode(";", $vrf->sections);
     	        // section must be in array
-    	        if (strlen($vrf->sections)==0 || in_array(@$_POST['sectionId'], $permitted_sections)) {
+    	        if (is_blank($vrf->sections) || in_array(@$_POST['sectionId'], $permitted_sections)) {
     				//cast
     				$vrf = (array) $vrf;
     				// set description if present
-    				$vrf['description'] = strlen($vrf['description'])>0 ? " ($vrf[description])" : "";
+    				$vrf['description'] = !is_blank($vrf['description']) ? " ($vrf[description])" : "";
 
     	        	if ($vrf['vrfId'] == $subnet_old_details['vrfId']) 	{ print '<option value="'. $vrf['vrfId'] .'" selected>'.$vrf['name'].$vrf['description'].'</option>'; }
     	        	else 												{ print '<option value="'. $vrf['vrfId'] .'">'.$vrf['name'].$vrf['description'].'</option>'; }
@@ -399,7 +399,7 @@ $("input[name='subnet']").change(function() {
     			<?php
                 if($locations!==false) {
         			foreach($locations as $l) {
-        				if($subnet_old_details['location'] == $l->id)	{ print "<option value='$l->id' selected='selected'>$l->name</option>"; }
+        				if(isset($subnet_old_details['location']) && $subnet_old_details['location'] == $l->id)	{ print "<option value='$l->id' selected='selected'>$l->name</option>"; }
         				else					{ print "<option value='$l->id'>$l->name</option>"; }
         			}
     			}
@@ -453,9 +453,9 @@ $("input[name='subnet']").change(function() {
         <td class="middle"><?php print _('Resize'); ?> / <?php print _('split'); ?></td>
         <td>
 	    <div class="btn-group">
-        	<button class="btn btn-xs btn-default"										  id="resize" 	rel="tooltip" data-container='body' title="<?php print _('Resize subnet'); ?>"   data-subnetId="<?php print $_POST['subnetId']; ?>"><i class="fa fa-gray fa-arrows-v"></i></button>
-        	<button class="btn btn-xs btn-default <?php if($slaves) print "disabled"; ?>" id="split"    rel="tooltip" data-container='body' title="<?php print _('Split subnet'); ?>"    data-subnetId="<?php print $_POST['subnetId']; ?>"><i class="fa fa-gray fa-expand"></i></button>
-        	<button class="btn btn-xs btn-default"										  id="truncate" rel="tooltip" data-container='body' title="<?php print _('Truncate subnet'); ?>" data-subnetId="<?php print $_POST['subnetId']; ?>"><i class="fa fa-gray fa-trash-o"></i></button>
+        	<button class="btn btn-xs btn-default"										  id="resize" 	rel="tooltip" data-container='body' title="<?php print _('Resize subnet'); ?>"   data-subnetId="<?php print escape_input($_POST['subnetId']); ?>"><i class="fa fa-gray fa-arrows-v"></i></button>
+        	<button class="btn btn-xs btn-default <?php if($slaves) print "disabled"; ?>" id="split"    rel="tooltip" data-container='body' title="<?php print _('Split subnet'); ?>"    data-subnetId="<?php print escape_input($_POST['subnetId']); ?>"><i class="fa fa-gray fa-expand"></i></button>
+        	<button class="btn btn-xs btn-default"										  id="truncate" rel="tooltip" data-container='body' title="<?php print _('Truncate subnet'); ?>" data-subnetId="<?php print escape_input($_POST['subnetId']); ?>"><i class="fa fa-gray fa-trash-o"></i></button>
 	    </div>
         </td>
         <td class="info2"><?php print _('Resize, split or truncate this subnet'); ?></td>
@@ -554,9 +554,9 @@ $("input[name='subnet']").change(function() {
         //hidden ones
         ?>
             <!-- hidden values -->
-            <input type="hidden" name="sectionId"       value="<?php print $_POST['sectionId']; ?>">
-            <input type="hidden" name="subnetId"        value="<?php print $_POST['subnetId'];  ?>">
-            <input type="hidden" name="action"    		value="<?php print $_POST['action'];    ?>">
+            <input type="hidden" name="sectionId"       value="<?php print escape_input($_POST['sectionId']); ?>">
+            <input type="hidden" name="subnetId"        value="<?php print escape_input($_POST['subnetId']);  ?>">
+            <input type="hidden" name="action"    		value="<?php print escape_input($_POST['action']);    ?>">
             <?php if(isset($_POST['freespaceMSID'])) { ?>
             <input type="hidden" name="freespace"    	value="true">
             <?php } ?>
@@ -660,7 +660,7 @@ $("input[name='subnet']").change(function() {
 			print "<button class='btn btn-sm btn-default btn-danger editSubnetSubmitDelete editSubnetSubmit'><i class='icon-white icon-trash'></i> "._('Delete subnet')."</button>";
 		}
 		?>
-		<button type="submit" class="btn btn-sm btn-default editSubnetSubmit <?php if($_POST['action']=="delete") print "btn-danger"; else print "btn-success"; ?>"><i class="fa <?php if($_POST['action']=="add") { print "fa-plus"; } else if ($_POST['action']=="delete") { print "fa-trash-o"; } else { print "fa-check"; } ?>"></i> <?php print ucwords(_($_POST['action'])); ?></button>
+		<button type="submit" class="btn btn-sm btn-default editSubnetSubmit <?php if($_POST['action']=="delete") print "btn-danger"; else print "btn-success"; ?>"><i class="fa <?php if($_POST['action']=="add") { print "fa-plus"; } else if ($_POST['action']=="delete") { print "fa-trash-o"; } else { print "fa-check"; } ?>"></i> <?php print escape_input(ucwords(_($_POST['action']))); ?></button>
 	</div>
 
 	<div class="manageSubnetEditResult"></div>

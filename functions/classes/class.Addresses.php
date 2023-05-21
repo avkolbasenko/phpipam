@@ -158,7 +158,7 @@ class Addresses extends Common_functions {
 	 */
 	public function address_type_type_to_index ($type = "Used") {
 		# null of no length
-		$type = strlen($type)==0 || is_null($type) ? "Used" : $type;
+		$type = is_blank($type) || is_null($type) ? "Used" : $type;
 		# fetch address states
 		$this->addresses_types_fetch();
 		# reindex
@@ -327,7 +327,7 @@ class Addresses extends Common_functions {
 	 */
 	public function search_similar_addresses ($address, $linked_field, $value) {
 		// sanity checks
-		if(!is_object($address) || !property_exists($address, $linked_field) || strlen($value)==0)
+		if(!is_object($address) || !property_exists($address, $linked_field) || is_blank($value))
 			return false;
 
 		$bulk_search = $this->bulk_fetch_similar_addresses($address, $linked_field, $value);
@@ -464,7 +464,7 @@ class Addresses extends Common_functions {
 			$this->address_within_subnetId($address['ip_addr'], $subnetId, true);
 
 		# set primary key for update
-		if($address['type']=="series") {
+		if(isset($address['type']) && $address['type']=="series") {
 			$id1 = "subnetId";
 			$id2 = "ip_addr";
 			unset($address['id']);
@@ -474,7 +474,7 @@ class Addresses extends Common_functions {
 		}
 
 		# remove gateway
-		if($address['is_gateway']==1)	{ $this->remove_gateway ($address['subnetId']); }
+		if(isset($address['is_gateway']) && $address['is_gateway']==1)	{ $this->remove_gateway ($address['subnetId']); }
 
 		# execute
 		try { $this->Database->updateObject("ipaddresses", $address, $id1, $id2); }
@@ -508,7 +508,8 @@ class Addresses extends Common_functions {
 	protected function modify_address_delete ($address) {
 		# fetch old details for logging
 		$address_old = $this->fetch_address (null, $address['id']);
-		if (isset($address['section'])) $address_old->section = $address['section'];
+		if (is_object($address_old) && isset($address['section']))
+			$address_old->section = $address['section'];
 
 		# series?
 		if($address['type']=="series") {
@@ -587,8 +588,8 @@ class Addresses extends Common_functions {
 			# loop
 			foreach ($all_nats as $nat) {
 			    # remove item from nat
-			    $s = json_decode($nat->src, true);
-			    $d = json_decode($nat->dst, true);
+			    $s = pf_json_decode($nat->src, true);
+			    $d = pf_json_decode($nat->dst, true);
 
 			    if(is_array($s['ipaddresses']))
 			    $s['ipaddresses'] = array_diff($s['ipaddresses'], array($obj_id));
@@ -627,7 +628,7 @@ class Addresses extends Common_functions {
 	 * @return void
 	 */
 	public function update_address_hostname ($ip, $id, $hostname = "") {
-		if(is_numeric($id) && strlen($hostname)>0) {
+		if(is_numeric($id) && !is_blank($hostname)) {
 			try { $this->Database->updateObject("ipaddresses", array("id"=>$id, "hostname"=>$hostname)); }
 			catch (Exception $e) {
 				return false;
@@ -780,7 +781,7 @@ class Addresses extends Common_functions {
 		}
 		# result
 		if ($cnt===true)	{ return $count->cnt==0 ? false : true; }
-		else				{ return is_null($count->id) ? false : $count->id; }
+		else				{ return is_null($count) ? false : $count->id; }
 	}
 
 	/**
@@ -976,11 +977,11 @@ class Addresses extends Common_functions {
 	 */
 	public function ptr_add ($address, $print_error = true, $id = null) {
 		// decode values
-		$values = json_decode($this->settings->powerDNS);
+		$values = pf_json_decode($this->settings->powerDNS);
 
     	// set default hostname for PTR if set
-    	if (strlen($address->hostname)==0) {
-        	if (strlen($values->def_ptr_domain)>0) {
+    	if (is_blank($address->hostname)) {
+        	if (!is_blank($values->def_ptr_domain)) {
             	$address->hostname = $values->def_ptr_domain;
         	}
     	}
@@ -1212,8 +1213,8 @@ class Addresses extends Common_functions {
 								);
 
 		# switch to 0, state to active
-		$address_insert['switch'] = strlen($address_insert['switch'])==0 ? 0 : $address_insert['switch'];
-		$address_insert['state']  = strlen($address_insert['state'])==0 ?  1 : $address_insert['state'];
+		$address_insert['switch'] = is_blank($address_insert['switch']) ? 0 : $address_insert['switch'];
+		$address_insert['state']  = is_blank($address_insert['state']) ?  1 : $address_insert['state'];
 
 		# custom fields, append to array
 		$m=9;
@@ -1358,7 +1359,10 @@ class Addresses extends Common_functions {
 		$this->initialize_subnets_object ();
 		$this->Subnets->reset_subnet_slaves_recursive();				//reset array of slaves before continuing
 	    $this->Subnets->fetch_subnet_slaves_recursive($subnetId);		//fetch array of slaves
+	    if(is_array($this->Subnets->slaves))
 	    $this->Subnets->slaves = array_unique($this->Subnets->slaves);	//remove possible duplicates
+		else
+		$this->Subnets->slaves = [];
 
 		# ip address order
 		if(!is_null($order)) 	{ $order_addr = array($order, $order_direction); }
@@ -1562,7 +1566,7 @@ class Addresses extends Common_functions {
 		# loop through IP addresses
 		for($c=0; $c<$size; $c++) {
 			# ignore already comressed range
-			if($addresses[$c]->class!="compressed-range") {
+			if(!property_exists($addresses[$c], 'class') || $addresses[$c]->class!="compressed-range") {
 				# gap between this and previous
 				if(gmp_strval( @gmp_sub($addresses[$c]->ip_addr, $addresses[$c-1]->ip_addr)) != 1) {
 					# remove index flag
@@ -1703,7 +1707,7 @@ class Addresses extends Common_functions {
 	public function check_permission ($user, $subnetId) {
 
 		# get all user groups
-		$groups = json_decode($user->groups);
+		$groups = pf_json_decode($user->groups);
 
 		# if user is admin then return 3, otherwise check
 		if($user->role == "Administrator")	{ return 3; }
@@ -1711,12 +1715,12 @@ class Addresses extends Common_functions {
     	$this->initialize_subnets_object();
         $subnet = $this->Subnets->fetch_subnet("id", $subnetId);
 		# set subnet permissions
-		$subnetP = json_decode($subnet->permissions);
+		$subnetP = pf_json_decode($subnet->permissions);
 
 		# set section permissions
 		$Sections = new Sections ($this->Database);
 		$section = $Sections->fetch_section ("id", $subnet->sectionId);
-		$sectionP = json_decode($section->permissions);
+		$sectionP = pf_json_decode($section->permissions);
 
 		# default permission
 		$out = 0;
@@ -1896,7 +1900,7 @@ class Addresses extends Common_functions {
         $html[] = "</tr>";
 
         // append ports
-        if(($n->type=="static" || $n->type=="destination") && (strlen($n->src_port)>0 && strlen($n->dst_port)>0)) {
+        if(($n->type=="static" || $n->type=="destination") && (!is_blank($n->src_port) && !is_blank($n->dst_port))) {
             $sources      = implode("<br>", $sources)." /".$n->src_port;
             $destinations = implode("<br>", $destinations)." /".$n->dst_port;
         }
@@ -1933,7 +1937,7 @@ class Addresses extends Common_functions {
      */
     public function translate_nat_objects_for_popup ($json_objects, $nat_id = false, $admin = false, $object_type = false, $object_id=false) {
         // to array "subnets"=>array(1,2,3)
-        $objects = json_decode($json_objects, true);
+        $objects = pf_json_decode($json_objects, true);
         // init out array
         $out = array();
         // check

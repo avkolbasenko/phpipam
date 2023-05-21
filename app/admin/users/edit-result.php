@@ -41,14 +41,14 @@ if($_POST['action']=="edit"||$_POST['action']=="delete") {
 
 # if password changes check and hash passwords
 if($auth_method->type != "local") { $_POST['password1'] = ""; $_POST['password2'] = ""; }
-if((strlen(@$_POST['password1'])>0 || (@$_POST['action']=="add") && $auth_method->type=="local")) {
+if((!is_blank(@$_POST['password1']) || (@$_POST['action']=="add") && $auth_method->type=="local")) {
 	//checks
 	if($_POST['password1']!=$_POST['password2'])						{ $Result->show("danger", _("Passwords do not match"), true); }
 	if(strlen($_POST['password1'])<8)									{ $Result->show("danger", _("Password must be at least 8 characters long!"), true); }
 
 	//enforce password policy
-	$policy = (json_decode($User->settings->passwordPolicy, true));
-	$Password_check->set_requirements  ($policy, explode(",",$policy['allowedSymbols']));
+	$policy = (pf_json_decode($User->settings->passwordPolicy, true));
+	$Password_check->set_requirements  ($policy, pf_explode(",",$policy['allowedSymbols']));
 	if (!$Password_check->validate ($_POST['password1'])) 				{ $Result->show("danger alert-danger ", _('Password validation errors').":<br> - ".implode("<br> - ", $Password_check->get_errors ()), true); }
 
 	//hash passowrd
@@ -56,7 +56,7 @@ if((strlen(@$_POST['password1'])>0 || (@$_POST['action']=="add") && $auth_method
 }
 
 # general checks
-if(strlen(@$_POST['real_name'])==0)										{ $Result->show("danger", _("Real name field is mandatory!"), true); }
+if(is_blank(@$_POST['real_name']))										{ $Result->show("danger", _("Real name field is mandatory!"), true); }
 # email format must be valid
 if (!$Tools->validate_email(@$_POST['email'])) 						{ $Result->show("danger", _("Invalid email address!"), true); }
 
@@ -66,7 +66,7 @@ if ($_POST['action']=="add") {
 	if ($auth_method->type=="local") {
 		if(strlen($_POST['username'])<3)								{ $Result->show("danger", _("Username must be at least 3 characters long!"), true); }
 	} else {
-		if(strlen($_POST['username'])==0)								{ $Result->show("danger", _("Username must be at least 1 character long!"), true); }
+		if(is_blank($_POST['username']))								{ $Result->show("danger", _("Username must be at least 1 character long!"), true); }
 	}
 	//check duplicate
 	if($Admin->fetch_object("users", "username", $_POST['username'])!==false) {
@@ -94,7 +94,7 @@ if(sizeof($myFields) > 0) {
 			}
 		}
 		//not null!
-		if($myField['Null']=="NO" && strlen($_POST[$myField['name']])==0) { $Result->show("danger", $myField['name']." "._("can not be empty!"), true); }
+		if($myField['Null']=="NO" && is_blank($_POST[$myField['name']])) { $Result->show("danger", $myField['name']." "._("can not be empty!"), true); }
 	}
 }
 
@@ -129,7 +129,7 @@ if (sizeof($myFields)>0) {
     }
 }
 # update pass ?
-if(strlen(@$_POST['password1'])>0 || (@$_POST['action']=="add" && $auth_method->type=="local")) {
+if(!is_blank(@$_POST['password1']) || (@$_POST['action']=="add" && $auth_method->type=="local")) {
 	$values['password'] = $_POST['password1'];
 }
 # pass change

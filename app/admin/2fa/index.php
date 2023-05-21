@@ -39,7 +39,7 @@ $csrf = $User->Crypto->csrf_cookie ("create", "2fa");
 <tr>
 	<td><?php print _('2FA name'); ?></td>
 	<td>
-		<input type="text" class="form-control input-sm" name="2fa_name" value="<?php print $settings->{'2fa_name'}; ?>">
+		<input type="text" class="form-control input-sm" name="2fa_name" value="<?php print @$settings->{'2fa_name'}; ?>">
 	</td>
 	<td class="info2"><?php print _('Name for 2fa application that will be displayed'); ?></td>
 </tr>
@@ -48,7 +48,7 @@ $csrf = $User->Crypto->csrf_cookie ("create", "2fa");
 <tr>
 	<td><?php print _('2FA length'); ?></td>
 	<td>
-		<input type="text" class="form-control input-sm" name="2fa_length" value="<?php print $settings->{'2fa_length'}; ?>">
+		<input type="text" class="form-control input-sm" name="2fa_length" value="<?php print @$settings->{'2fa_length'}; ?>">
 	</td>
 	<td class="info2"><?php print _('Length of 2FA secret (16 to 32)'); ?></td>
 </tr>
@@ -57,7 +57,7 @@ $csrf = $User->Crypto->csrf_cookie ("create", "2fa");
 <tr>
 	<td><?php print _('2FA user change'); ?></td>
 	<td>
-		<input type="checkbox" class="input-switch" value="1" name="2fa_userchange" <?php if($settings->{'2fa_userchange'} == 1) print 'checked'; ?>>
+		<input type="checkbox" class="input-switch" value="1" name="2fa_userchange" <?php if(@$settings->{'2fa_userchange'} == 1) print 'checked'; ?>>
 	</td>
 	<td class="info2"><?php print _('Can users change 2fa settings for their account'); ?></td>
 </tr>
@@ -127,7 +127,7 @@ else {
 		// status
 		$status = "";
 		if ($u->{'2fa'}==0)						{ $status = "<span class='badge badge1 severity2'>Disabled</span>";					$btn2_class = "disabled"; $btn3_class = "disabled"; }
-		elseif (strlen($u->{'2fa_secret'})==0)	{ $status = "<span class='badge badge1 severity1'>Enabled, not activated</span>";	$btn1_class = "disabled"; $btn2_class = "disabled"; }
+		elseif (is_blank($u->{'2fa_secret'}))	{ $status = "<span class='badge badge1 severity1'>Enabled, not activated</span>";	$btn1_class = "disabled"; $btn2_class = "disabled"; }
 		else 									{ $status = "<span class='badge badge1 severity0'>Enabled</span>";					$btn1_class = "disabled"; }
 
 		$html[] = "<tr>";

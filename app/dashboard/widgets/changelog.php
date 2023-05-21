@@ -5,7 +5,7 @@
  *********************************************/
 
 # required functions if requested via AJAX
-if(!is_object(@$User)) {
+if(!isset($User)) {
 	require_once( dirname(__FILE__) . '/../../../functions/functions.php' );
 	# classes
 	$Database	= new Database_PDO;
@@ -21,7 +21,7 @@ if(!is_object(@$User)) {
 $User->check_user_session ();
 
 # if direct request that redirect to tools page
-if($_SERVER['HTTP_X_REQUESTED_WITH']!="XMLHttpRequest")	{
+if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || $_SERVER['HTTP_X_REQUESTED_WITH'] != "XMLHttpRequest")	{
 	header("Location: ".create_link("tools","changelog"));
 }
 
@@ -79,7 +79,7 @@ else {
         		$changelog = str_replace("\r\n", "<br>",$l['cdiff']);
         		$changelog = str_replace("\n", "<br>",$changelog);
         		$changelog = htmlentities($changelog);
-        		$changelog = array_filter(explode("<br>", $changelog));
+        		$changelog = array_filter(pf_explode("<br>", $changelog));
 
                 $diff = array();
 
@@ -100,8 +100,8 @@ else {
             		}
 
             		// field
-            		$field = explode(":", $c);
-            	    $value = explode("=>", html_entity_decode($field[1]));
+					$field = array_pad(explode(":", $c), 2 , '');
+        	    	$value = array_pad(explode("=>", html_entity_decode($field[1])), 2, '');
 
             	    $field = trim(str_replace(array("[","]"), "", $field[0]));
             	    if(is_array(@$Log->changelog_keys[$type])) {
@@ -133,7 +133,7 @@ else {
 				print "	<td>$l[ctype] / $l[caction] $l[cresult]</td>";
 
 				# subnet, section or ip address
-				if(strlen($l['tid'])==0) {
+				if(is_blank($l['tid'])) {
 					print "<td><span class='badge badge1 badge5 alert-danger'>"._("Deleted")."</span></td>";
 				}
 				elseif($l['ctype']=="IP address")	{

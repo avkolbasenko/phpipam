@@ -25,7 +25,7 @@ $size = sizeof($_POST) / 4;
 
 //get unique keys for subnets because they are not sequential if deleted!!!
 foreach($_POST as $key=>$line) {
-	if (strlen(strstr($key,"subnet"))>0) {
+	if (!is_blank(strstr($key,"subnet"))) {
 		$allSubnets[] = $key;
 	}
 }
@@ -36,7 +36,7 @@ foreach($allSubnets as $subnet) {
 	$m = str_replace("subnet-", "", $subnet);
 
 	//reformat subnet
-	$_temp = explode("/", $_POST['subnet-' . $m]);
+	$_temp = $Subnets->cidr_network_and_mask($_POST['subnet-' . $m]);
 
 	//set subnet details for importing
 	$subnet_import['subnet'] 	   = $Subnets->transform_to_decimal($_temp[0]);

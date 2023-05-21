@@ -50,7 +50,7 @@ if ($_POST['action'] != "add") {
 # we are adding new folder - get folder details
 else {
 	# for selecting master subnet if added from subnet details!
-	if(strlen($_POST['subnetId']) > 0) {
+	if(!is_blank($_POST['subnetId'])) {
     	$subnet_old_temp = (array) $Subnets->fetch_subnet(null, $_POST['subnetId']);
     	$subnet_old_details['masterSubnetId'] 	= @$subnet_old_temp['id'];			// same master subnet ID for nested
     	$subnet_old_details['vlanId'] 		 	= @$subnet_old_temp['vlanId'];		// same default vlan for nested
@@ -122,9 +122,9 @@ $readonly = $_POST['action']=="edit" || $_POST['action']=="delete" ? true : fals
     </tr>
 
     <!-- hidden values -->
-    <input type="hidden" name="sectionId"       value="<?php print $_POST['sectionId'];    ?>">
-    <input type="hidden" name="subnetId"        value="<?php print $_POST['subnetId'];     ?>">
-    <input type="hidden" name="action"    		value="<?php print $_POST['action']; ?>">
+    <input type="hidden" name="sectionId"       value="<?php print escape_input($_POST['sectionId']);    ?>">
+    <input type="hidden" name="subnetId"        value="<?php print escape_input($_POST['subnetId']);     ?>">
+    <input type="hidden" name="action"    		value="<?php print escape_input($_POST['action']); ?>">
 	<input type="hidden" name="vlanId" 			value="0">
 	<input type="hidden" name="vrfId" 			value="0">
 	<input type="hidden" name="csrf_cookie"     value="<?php print $csrf; ?>">
@@ -187,7 +187,7 @@ $readonly = $_POST['action']=="edit" || $_POST['action']=="delete" ? true : fals
 			print "<button class='btn btn-sm btn-default btn-danger editFolderSubmitDelete' data-action='delete' data-subnetId='$folder_old_details[id]'><i class='fa fa-trash-o'></i> "._('Delete folder')."</button>";
 		}
 		?>
-		<button class="btn btn-sm btn-default editFolderSubmit <?php if($_POST['action']=="delete") print "btn-danger"; else print "btn-success"; ?>"><i class="<?php if($_POST['action']=="add") { print "fa fa-plus"; } else if ($_POST['action']=="delete") { print "fa fa-trash-o"; } else { print "fa fa-check"; } ?>"></i> <?php print ucwords(_($_POST['action'])); ?></button>
+		<button class="btn btn-sm btn-default editFolderSubmit <?php if($_POST['action']=="delete") print "btn-danger"; else print "btn-success"; ?>"><i class="<?php if($_POST['action']=="add") { print "fa fa-plus"; } else if ($_POST['action']=="delete") { print "fa fa-trash-o"; } else { print "fa fa-check"; } ?>"></i> <?php print escape_input(ucwords(_($_POST['action']))); ?></button>
 	</div>
 
 	<div class="manageFolderEditResult"></div>

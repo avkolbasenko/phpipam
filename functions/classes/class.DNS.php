@@ -145,12 +145,12 @@ class DNS extends Common_functions {
 			}
 			// ok
 			else {
-				if (strlen($nameservers->namesrv1)==0) {
+				if (is_blank($nameservers->namesrv1)) {
 					return false;
 				}
 				else {
 					// to array
-					$nsarray = explode(";", $nameservers->namesrv1);
+					$nsarray = pf_explode(";", $nameservers->namesrv1);
 					// check against dead NSes
 					foreach ($nsarray as $k=>$nsserv) {
 						trim($nsserv);
@@ -189,7 +189,7 @@ class DNS extends Common_functions {
 		$address = $this->transform_address ($address, "dotted");
 
 		// if both are set ignore
-		if (strlen($hostname)>1 && strlen($address)>0) {
+		if (!is_blank($hostname) && !is_blank($address)) {
 											{ return array("class"=>"", "address"=>$address, "name"=>$hostname); }
 		}
 		// if settings permits to check or override is set
@@ -199,7 +199,7 @@ class DNS extends Common_functions {
 				return array("class"=>"", 		"address"=>$address, "name"=>$hostname);
 			}
 			// if address is set fetch A record
-			elseif ($address!==false && strlen($address)>0) {
+			elseif ($address!==false && !is_blank($address)) {
 				// set resolve type
 				$this->type = "PTR";
 
@@ -210,7 +210,7 @@ class DNS extends Common_functions {
 				else						{ return array("class"=>"resolved", "address"=>$address, "name"=>$resolved); }
 			}
 			// if hostname is set fetch PTR record
-			elseif($hostname!==false && strlen($hostname)>0) {
+			elseif($hostname!==false && !is_blank($hostname)) {
 				// set resolve type
 				$this->type = "A";
 

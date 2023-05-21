@@ -207,6 +207,9 @@ if($all_sections!==false) {
 					}
 
 					if( (isset($_GET['vrf'])) && ($_GET['vrf'] == "on") ) {
+						if (!isset($vrfs[$subnet['vrfId']])) {
+							$vrfs[$subnet['vrfId']] = "";
+						}
 						$worksheet->write($curRow, $curColumn, $vrfs[$subnet['vrfId']], $format_text);
 						$curColumn++;
 					}
@@ -233,7 +236,7 @@ if($all_sections!==false) {
 
 					if( (isset($_GET['device'])) && ($_GET['device'] == "on") ) {
 						//change device to name
-						$ip['device'] = is_null($ip['switch'])||strlen($ip['switch'])==0||$ip['switch']==0 ? "" : $devices_indexed[$ip['switch']]->hostname;
+						$ip['device'] = is_null($ip['switch'])||is_blank($ip['switch'])||$ip['switch']==0 ? "" : $devices_indexed[$ip['switch']]->hostname;
 						$worksheet->write($curRow, $curColumn, $ip['device'], $format_text);
 						$curColumn++;
 					}

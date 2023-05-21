@@ -52,11 +52,11 @@ else {
 		if ($all_domains!==false) {
 
 			// Reverse the hostname, this fixes #1471 and #2374
-			$r_hostdomain = implode(".", array_reverse(array_slice(explode(".", $_POST['domain_id']), 1)));
+			$r_hostdomain = implode(".", array_reverse(array_slice(pf_explode(".", $_POST['domain_id']), 1)));
 
 			foreach($all_domains as $dk=>$domain_s) {
 				// Reverse the domain and compare it reversed, this fixes #1471 and #2374
-				$r_domain = implode(".", array_reverse(explode(".", $domain_s->name)));
+				$r_domain = implode(".", array_reverse(pf_explode(".", $domain_s->name)));
 
 				if (substr($r_hostdomain, 0, strlen($r_domain)) == $r_domain) {
 					$matches[$dk] = $domain_s;
@@ -126,7 +126,7 @@ $readonly = $_POST['action']=="delete" ? "readonly" : "";
 		<td style="width:150px;"><?php print _('Name'); ?></td>
 		<td>
 			<input type="text" class="name form-control input-sm" name="name" placeholder="<?php print _('www.example.com'); ?>" value="<?php print $record->name; ?>" <?php print $readonly; ?>>
-			<input type="hidden" name="action" value="<?php print $_POST['action']; ?>">
+			<input type="hidden" name="action" value="<?php print escape_input($_POST['action']); ?>">
 			<input type="hidden" name="id" value="<?php print @$_POST['id']; ?>">
 			<input type="hidden" name="domain_id" value="<?php print @$_POST['domain_id']; ?>">
             <input type="hidden" name="csrf_cookie" value="<?php print $csrf; ?>">
@@ -212,7 +212,7 @@ $readonly = $_POST['action']=="delete" ? "readonly" : "";
 		<?php if($_POST['action']!=="delete" && isset($record->id) && $User->get_module_permissions ("pdns")>=User::ACCESS_RWA) { ?>
 		<button class="btn btn-sm btn-default btn-danger" id="editRecordSubmitDelete"><i class="fa fa-trash-o"></i> <?php print _("Delete"); ?></button>
 		<?php } ?>
-		<button class="btn btn-sm btn-default <?php if($_POST['action']=="delete") { print "btn-danger"; } else { print "btn-success"; } ?>" id="editRecordSubmit"><i class="fa <?php if($_POST['action']=="add") { print "fa-plus"; } else if ($_POST['action']=="delete") { print "fa-trash-o"; } else { print "fa-check"; } ?>"></i> <?php print ucwords(_($_POST['action'])); ?></button>
+		<button class="btn btn-sm btn-default <?php if($_POST['action']=="delete") { print "btn-danger"; } else { print "btn-success"; } ?>" id="editRecordSubmit"><i class="fa <?php if($_POST['action']=="add") { print "fa-plus"; } else if ($_POST['action']=="delete") { print "fa-trash-o"; } else { print "fa-check"; } ?>"></i> <?php print escape_input(ucwords(_($_POST['action']))); ?></button>
 	</div>
 	<!-- result -->
 	<div class="record-edit-result"></div>

@@ -184,7 +184,7 @@ else {
 				<p class="muted">
 	            <?php
 	            $title = str_replace(" / ", "<span class='divider'>/</span>", $title);
-	            $tmp = explode($User->settings->siteTitle, $title);
+	            $tmp = pf_explode($User->settings->siteTitle, $title);
 	            unset($tmp[0]);
 	            print implode($User->settings->siteTitle, $tmp);
 	            ?>
@@ -240,7 +240,7 @@ else {
 				print "</div>";
 			}
 			/* all sections */
-			elseif($_GET['page']=="subnets" && strlen($_GET['section'])==0) {
+			elseif($_GET['page']=="subnets" && is_blank($_GET['section'])) {
 				print "<div id='dashboard' class='container'>";
 				include_once("app/sections/all-sections.php");
 				print "</div>";
@@ -251,7 +251,7 @@ else {
 				print "<tr>";
 
 				# fix for empty section
-				if( isset($_GET['section']) && (strlen(@$_GET['section']) == 0) )			{ unset($_GET['section']); }
+				if( isset($_GET['section']) && (is_blank(@$_GET['section'])) )			{ unset($_GET['section']); }
 
 				# hide left menu
 				if( ($_GET['page']=="tools"||$_GET['page']=="administration") && !isset($_GET['section'])) {

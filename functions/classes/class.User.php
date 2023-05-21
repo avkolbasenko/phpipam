@@ -79,6 +79,11 @@ class User extends Common_functions {
     private $authmethodtype = "local";
 
     /**
+     * @var bool
+     */
+    private $twofa =  false;
+
+    /**
      * ldap is used flag
      *
      * (default value: false)
@@ -212,7 +217,7 @@ class User extends Common_functions {
         $session_lifetime = ini_get('session.cookie_lifetime');
         $session_use_cookies  = ini_get('session.use_cookies');
 
-        if ($session_use_cookies && is_string($session_id) && strlen($session_id) > 0)
+        if ($session_use_cookies && is_string($session_id) && !is_blank($session_id))
             setcookie_samesite($session_name, $session_id, $session_lifetime, true);
     }
 
@@ -304,7 +309,7 @@ class User extends Common_functions {
     public function is_authenticated () {
         # if checked for subpages first check if $user is array
         if(!is_array($this->user)) {
-            if( strlen(@$_SESSION['ipamusername'])>0 ) {
+            if( !is_blank(@$_SESSION['ipamusername']) ) {
                 # save username
                 $this->username = $_SESSION['ipamusername'];
                 # check for timeout
@@ -366,7 +371,7 @@ class User extends Common_functions {
         # not authenticated
         if($this->authenticated===false) {
             # error print for AJAX
-            if(@$_SERVER['HTTP_X_REQUESTED_WITH'] == "XMLHttpRequest") {
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == "XMLHttpRequest") {
                 # for AJAX always check origin
                 $this->check_referrer ();
                 # kill session
@@ -445,7 +450,7 @@ class User extends Common_functions {
     private function check_timeout () {
         //session set
         if(isset($_SESSION['lastactive'])) {
-            if( strlen($this->settings->inactivityTimeout)>0 && (time()-@$_SESSION['lastactive']) > $this->settings->inactivityTimeout) {
+            if( !is_blank($this->settings->inactivityTimeout) && (time()-@$_SESSION['lastactive']) > $this->settings->inactivityTimeout) {
                 $this->timeout = true;
                 unset($_SESSION['lastactive']);
             }
@@ -475,7 +480,7 @@ class User extends Common_functions {
 
         $urlpath = $_COOKIE['phpipamredirect'];
 
-        if (!is_string($urlpath) || strlen($urlpath) == 0 || !filter_var('https://ipam/' . $urlpath, FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED))
+        if (!is_string($urlpath) || is_blank($urlpath) || !filter_var('https://ipam/' . $urlpath, FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED))
             return false;
 
         // ignore login / logout
@@ -598,7 +603,7 @@ class User extends Common_functions {
      * @return void
      */
     private function check_referrer () {
-        if ( ($_SERVER['HTTP_X_REQUESTED_WITH'] != "XMLHttpRequest") && ($_SERVER['HTTP_ORIGIN'] != $_SERVER['HTTP_HOST'] ) ) {
+        if ( (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || $_SERVER['HTTP_X_REQUESTED_WITH'] != "XMLHttpRequest") && ($_SERVER['HTTP_ORIGIN'] != $_SERVER['HTTP_HOST'] ) ) {
             # write log and die
             $this->Log->write ("referrer_check", _('Page not referred properly'), 0 );
             $this->Result->show ("danger", _('Page not referred properly'), true);
@@ -652,13 +657,13 @@ class User extends Common_functions {
      */
     public function fetch_favourite_subnets () {
         # none
-        if(strlen($this->user->favourite_subnets)==0) {
+        if(is_blank($this->user->favourite_subnets)) {
             return false;
         }
         # ok
         else {
             # store to array
-            $subnets = explode(";", $this->user->favourite_subnets);
+            $subnets = pf_explode(";", $this->user->favourite_subnets);
             $subnets = array_filter($subnets);
 
             if(sizeof($subnets)>0) {
@@ -666,7 +671,7 @@ class User extends Common_functions {
                 $fsubnets = array();
                 # fetch details for each subnet
                 foreach($subnets as $id) {
-                    $query = "select `su`.`id` as `subnetId`,`se`.`id` as `sectionId`, `subnet`, `mask`,`isFull`,`su`.`description`,`se`.`description` as `section`, `vlanId`, `isFolder`
+                    $query = "select `su`.`id`, `su`.`id` as `subnetId`,`se`.`id` as `sectionId`, `subnet`, `mask`,`isFull`,`su`.`description`,`se`.`description` as `section`, `vlanId`, `isFolder`
                               from `subnets` as `su`, `sections` as `se` where `su`.`id` = ? and `su`.`sectionId` = `se`.`id` limit 1;";
 
                     try { $fsubnet = $this->Database->getObjectQuery($query, array($id)); }
@@ -709,7 +714,7 @@ class User extends Common_functions {
      */
     private function remove_favourite ($subnetId) {
         # set old favourite subnets
-        $old_favourites = explode(";", $this->user->favourite_subnets);
+        $old_favourites = pf_explode(";", $this->user->favourite_subnets);
         # set new
         $new_favourites = implode(";", array_diff($old_favourites, array($subnetId)));
         # update
@@ -729,7 +734,7 @@ class User extends Common_functions {
      */
     private function add_favourite ($subnetId) {
         # set old favourite subnets
-        $old_favourites = explode(";", $this->user->favourite_subnets);
+        $old_favourites = pf_explode(";", $this->user->favourite_subnets);
         $old_favourites = is_array($old_favourites) ? $old_favourites : array();
         # set new
         $new_favourites = implode(";",array_merge(array($subnetId), $old_favourites));
@@ -750,7 +755,7 @@ class User extends Common_functions {
      */
     public function is_subnet_favourite ($subnetId) {
         # check if in array
-        $subnets = explode(";", $this->user->favourite_subnets);
+        $subnets = pf_explode(";", $this->user->favourite_subnets);
         $subnets = array_filter($subnets);
         # result
         return in_array($subnetId, $subnets) ? true : false;
@@ -799,7 +804,7 @@ class User extends Common_functions {
         # first we need to check if username exists
         $this->fetch_user_details ($username);
         # set method type if set, otherwise presume local auth
-        $this->authmethodid = strlen(@$this->user->authMethod)>0 ? $this->user->authMethod : 1;
+        $this->authmethodid = !is_blank(@$this->user->authMethod) ? $this->user->authMethod : 1;
 
         # 2fa
         if ($this->user->{'2fa'}==1) {
@@ -1023,7 +1028,7 @@ class User extends Common_functions {
         $dirparams['base_dn'] = @$authparams['base_dn'];
         $dirparams['ad_port'] = @$authparams['ad_port'];
         $dirparams['account_suffix'] = @$authparams['account_suffix'];
-        $dirparams['domain_controllers'] = explode(";", str_replace(" ", "", $authparams['domain_controllers']));
+        $dirparams['domain_controllers'] = pf_explode(";", str_replace(" ", "", $authparams['domain_controllers']));
         // set ssl and tls separate for ldap and AD
         if ($this->ldap) {
             // set ssl and tls
@@ -1111,7 +1116,7 @@ class User extends Common_functions {
      */
     private function auth_AD ($username, $password) {
         // parse settings for LDAP connection and store them to array
-        $authparams = json_decode($this->authmethodparams, true);
+        $authparams = pf_json_decode($this->authmethodparams, true);
         // authenticate
         $this->directory_authenticate($authparams, $username, $password);
     }
@@ -1127,7 +1132,7 @@ class User extends Common_functions {
      */
     private function auth_LDAP ($username, $password) {
         // parse settings for LDAP connection and store them to array
-        $authparams = json_decode($this->authmethodparams, true);
+        $authparams = pf_json_decode($this->authmethodparams, true);
         $this->ldap = true;                            //set ldap flag
 
         // set uid
@@ -1163,7 +1168,7 @@ class User extends Common_functions {
      */
     private function auth_radius ($username, $password) {
         # decode radius parameters
-        $params = json_decode($this->authmethodparams);
+        $params = pf_json_decode($this->authmethodparams);
 
         # check for socket support !
         if(!in_array("sockets", get_loaded_extensions())) {
@@ -1182,7 +1187,7 @@ class User extends Common_functions {
         # debug?
         if($this->debugging) {
             print "<pre style='width:700px;margin:auto;margin-top:10px;'>";
-            print(implode("<br>", $Radius->debug_text));
+            print(escape_input(implode("<br>", $Radius->debug_text)));
             print "</pre>";
         }
 
@@ -1351,7 +1356,7 @@ class User extends Common_functions {
                         "theme"            => $post['theme'],
                         "2fa"              => $this->verify_checkbox(@$post['2fa']),
                         );
-        if(strlen($post['password1'])>0) {
+        if(!is_blank($post['password1'])) {
         $items['password'] = $this->crypt_user_pass ($post['password1']);
         }
 
@@ -1553,7 +1558,7 @@ class User extends Common_functions {
     private function log_failed_access($username) {
         $log_msg = Config::ValueOf('failed_access_message');
 
-        if (!is_string($username) || !is_string($log_msg) || strlen($log_msg)<1)
+        if (!is_string($username) || !is_string($log_msg) || is_blank($log_msg))
             return;
 
         $log_msg = str_replace("%u", $username, $log_msg);
@@ -1577,7 +1582,7 @@ class User extends Common_functions {
         if(is_object($cached_item)) return $cached_item->result;
 
         $groups = array();
-        foreach((array) json_decode($json, true) as $group_id => $perm) {
+        foreach((array) pf_json_decode($json, true) as $group_id => $perm) {
             $group_details = $this->groups_parse (array($group_id));
 
             $tmp = array();
@@ -1658,20 +1663,20 @@ class User extends Common_functions {
 
         $max_permission = 0;
 
-        $ids = explode(";", $valid_sections);
+        $ids = pf_explode(";", $valid_sections);
         foreach($ids as $id) {
             $section = $this->fetch_object("sections", "id", $id);
 
             if (!is_object($section)) continue;
 
             # Get Section permissions
-            $sectionP = json_decode($section->permissions, true);
+            $sectionP = pf_json_decode($section->permissions, true);
 
             # ok, user has section access, check also for any higher access from subnet
             if(!is_array($sectionP)) continue;
 
             # get all user groups
-            $groups = json_decode($this->user->groups, true);
+            $groups = pf_json_decode($this->user->groups, true);
 
             foreach($sectionP as $sk=>$sp) {
                 # check each group if user is in it and if so check for permissions for that group
@@ -1718,7 +1723,7 @@ class User extends Common_functions {
      */
     private function register_user_module_permissions () {
         // decode
-        $permissions = json_decode($this->user->module_permissions, true);
+        $permissions = pf_json_decode($this->user->module_permissions, true);
         // check for each module
         foreach ($this->get_modules_with_permissions() as $m) {
             if (!is_array($permissions)) {
