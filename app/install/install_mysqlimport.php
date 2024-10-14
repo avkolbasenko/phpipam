@@ -2,9 +2,9 @@
 $db = Config::ValueOf('db');
 
 // add prefix - install or migrate
-$title_prefix = @$_GET['subnetId']=="migrate" ? _("migration") : _("installation");
-$text_prefix  = @$_GET['subnetId']=="migrate" ? _("migrate") : _("install");
-$filename	  = @$_GET['subnetId']=="migrate" ? "MIGRATE" : "SCHEMA";
+$title_prefix = $GET->subnetId=="migrate" ? _("migration") : _("installation");
+$text_prefix  = $GET->subnetId=="migrate" ? _("migrate") : _("install");
+$filename	  = $GET->subnetId=="migrate" ? "MIGRATE" : "SCHEMA";
 ?>
 
 <div class="widget-dash col-xs-12 col-md-8 col-md-offset-2">
@@ -37,7 +37,7 @@ exit</pre>
 
 				<?php
 				// file check
-				if(@$_GET['subnetId']=="migrate") {
+				if($GET->subnetId=="migrate") {
 					if(!file_exists(dirname(__FILE__)."/../../db/MIGRATE.sql")) {
 						print "<div class='alert alert-danger'>"._("Cannot access file db/MIGRATE.sql!")."</div>";
 					}
@@ -52,7 +52,7 @@ exit</pre>
 				<pre><?php
 					$esc_user = escape_input($db['user']);
 					$esc_pass = escape_input(_("<YOUR SECRET PASSWORD FROM config.php>"));
-					$esc_webhost = is_string($db['webhost']) && strlen($db['webhost']) ? escape_input($db['webhost']) : 'localhost';
+					$esc_webhost = is_string(@$db['webhost']) && strlen(@$db['webhost']) ? escape_input($db['webhost']) : 'localhost';
 					$db_name  = escape_input($db['name']);
 
 					print "# Set permissions for phpipam user <br>";

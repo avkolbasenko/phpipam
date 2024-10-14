@@ -50,7 +50,7 @@ if(@$config['requests_public']===false) {
 	<link rel="shortcut icon" href="css/images/favicon.png">
 
 	<!-- js -->
-	<script src="js/jquery-3.5.1.min.js?v=<?php print SCRIPT_PREFIX; ?>"></script>
+	<script src="js/jquery-3.7.1.min.js?v=<?php print SCRIPT_PREFIX; ?>"></script>
 	<script src="js/login.js?v=<?php print SCRIPT_PREFIX; ?>"></script>
 	<script src="js/bootstrap.min.js?v=<?php print SCRIPT_PREFIX; ?>"></script>
 	<script>
@@ -124,49 +124,14 @@ if(@$config['requests_public']===false) {
 
 	<?php
 	# include proper subpage
-	if($_GET['page'] == "login") 				{
+	if($GET->page == "login") 				{
 		# disable main login form if you want use another authentification method by default (SAML, LDAP, etc.)
 		$include_main_login_form = !isset($config['disable_main_login_form']) || !$config['disable_main_login_form'];
 		if ($include_main_login_form) include_once('login_form.php');
 	}
-	else if ($_GET['page'] == "request_ip") 	{ include_once('request_ip_form.php'); }
-	else 										{ $_GET['subnetId'] = "404"; print "<div id='error'>"; include_once('app/error.php'); print "</div>"; }
+	elseif ($GET->page == "request_ip") 	{ include_once('request_ip_form.php'); }
+	else 										{ $GET->subnetId = "404"; print "<div id='error'>"; include_once('app/error.php'); print "</div>"; }
 	?>
-
-	<!-- login response -->
-	<div id="loginCheck">
-		<?php
-		# deauthenticate user
-		if ( $User->is_authenticated()===true ) {
-			# print result
-			if(isset($_GET['section']) && $_GET['section']=="timeout")
-				$Result->show("success", _('You session has timed out'));
-			else
-				$Result->show("success", _('You have logged out'));
-
-			# write log
-			$Log->write( _("User logged out"), _("User")." ".$User->username." "._("has logged out"), 0, $User->username );
-
-			# destroy session
-			$User->destroy_session();
-		}
-
-		//check if SAML2 login is possible
-		$saml2settings=$Tools->fetch_object("usersAuthMethod", "type", "SAML2");
-
-		if ($saml2settings!=false) {
-			$version = pf_json_decode(@file_get_contents(dirname(__FILE__).'/../../functions/php-saml/src/Saml2/version.json'), true);
-			$version = $version['php-saml']['version'];
-
-			if ($version < 3.4) {
-				$Result->show("danger", _('php-saml library missing, please update submodules'));
-			} else {
-				$Result->show("success", _('You can login with SAML2').' <a href="'.create_link('saml2').'">'._('here').'</a>!');
-			}
-		}
-
-		?>
-	</div>
 
 </div>
 </div>

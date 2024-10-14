@@ -27,7 +27,7 @@ $device_types = $Tools->fetch_all_objects ("deviceTypes", "tid");
 $custom_fields = (array) $Tools->fetch_custom_fields('devices');
 
 # set hidden fields
-$hidden_fields = pf_json_decode($User->settings->hiddenCustomFields, true);
+$hidden_fields = db_json_decode($User->settings->hiddenCustomFields, true);
 $hidden_fields = is_array(@$hidden_fields['devices']) ? $hidden_fields['devices'] : array();
 
 # size of custom fields
@@ -43,9 +43,6 @@ if (isset($device_types)) {
 	}
 }
 
-# strip tags - XSS
-$_GET = $User->strip_input_tags ($_GET);
-
 # title
 print "<h4>"._('List of devices')."</h4>";
 print "<hr>";
@@ -59,6 +56,14 @@ print "<div class='btn-group'>";
 	if($User->is_admin(false))
 	print "<a href='".create_link("administration", "device-types")."' class='btn btn-sm btn-default'><i class='fa fa-tablet'></i> "._('Manage device types')."</a>";
 print "</div>";
+
+if($User->get_module_permissions ("devices")>=User::ACCESS_RW) {
+	print '<div class="btn-group pull-right" style="margin-bottom:10px;">';
+	print '	<div class="hidden"><select name="dataType"><option value="devices" selected="selected">Devices</option></select></div>';
+	print '	<button class="dataExport btn btn-sm btn-default" rel="tooltip" data-placement="bottom" title="" data-original-title="Export data entries for the selected type"><i class="fa fa-download"></i> Export</button>';
+	print '</div>';
+	print '<div class="clearfix"></div>';
+}
 
 # filter
 include_once ("all-devices-filter.php");

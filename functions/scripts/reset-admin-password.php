@@ -43,14 +43,15 @@ else {
 // validate password
 if(strlen($password)<8)										{ $Result->show_cli("Password must be at least 8 characters long", true); }
 
-// hash passowrd
+// hash password
 $password_crypted = $User->crypt_user_pass ($password);
 // save type
 $crypt_type = $User->return_crypt_type ();
 
 // set update array
 $values = array("id"=>1,
-				"password"=>$password_crypted
+				"password"     =>$password_crypted,
+				"passkey_only" =>0
 				);
 
 // update password
