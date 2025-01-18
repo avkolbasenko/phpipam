@@ -84,7 +84,7 @@ function is_blank($data) {
 function escape_input($data) {
 	if (is_blank($data))
 		return '';
-	$safe_data = htmlentities($data, ENT_QUOTES);
+	$safe_data = htmlentities($data, ENT_QUOTES, 'UTF-8');
 	return is_string($safe_data) ? $safe_data : '';
 }
 
@@ -227,6 +227,17 @@ function db_json_decode($json, $associative = null, $depth = 512, $flags = 0) {
     }
 
     return json_decode($json, $associative, $depth, $flags);
+}
+
+/**
+ *  Workaround PHP bug https://github.com/php/php-src/issues/16870
+ *
+ *  Return 2^exp without using gmp_pow()
+ */
+function gmp_pow2(int $exp) : GMP {
+	$result = gmp_init(0);
+	gmp_setbit($result, $exp);
+	return $result;
 }
 
 // Include backwards compatibility wrapper functions.

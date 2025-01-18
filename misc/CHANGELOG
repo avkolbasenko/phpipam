@@ -1,7 +1,36 @@
+== 1.7.3
+
+    Bugfixes:
+    ----------------------------
+    + Backported PHP8 compatibility fixes;
+    + Workaround PHP bug GH-16870 (#4339);
+    + Request new IP hangs (#4346);
+
+== 1.7.2
+
+    Bugfixes:
+    ----------------------------
+    + Slow UI performance with bootstrap v3.4.1 (#4311);
+
+== 1.7.1
+
+    Bugfixes:
+    ----------------------------
+    + Backported PHP8 compatibility fixes;
+    + Fixed passkeys upgrade queries;
+    + MySQL no active transaction error during upgrades (#4319);
+    + $config['disable_main_login_form'] shows blank page (#4317);
+    + Unable to clear custom fields (#4313);
+
+    Security Fixes:
+    ----------------------------
+    + XSS - reflected via HTTP_X_FORWARDED_PORT;
+
 == 1.7.0
 
     New features:
     ------------
+    + Full php8.3 compatibility;
     + Added support for passkeys / passwordless logins;
     + API:
         + Added API changelog;
@@ -32,6 +61,8 @@
     + Fixed Undefined variable when adding nameserver (#4230);
     + Fixed Tag Management Color Picker (#3629);
     + Fixed Arrows for linked addresses do not match between themes (#4216);
+    * Fixed Captcha and invalid login checks (#3480, #4198);
+    + Fixed 2FA TOTP validation issues (#3724);
 
     Enhancements, changes:
     ----------------------------
@@ -46,18 +77,21 @@
     ----------------------------
     + Upgraded jQuery to 3.7.1;
     + Upgraded bootstrap to 3.4.1;
+    + Upgraded jQuery-ui to 1.13.3;
     + Cookies set without Secure attribute;
     + Multiple XSS injections (#4145,#4146,#4147,#4148,#4149.#4150,#4151);
     + HTML DOM XSS injection via filenames when uploading (#4160);
     + Escape loaded database strings by default, stored XSS defense;
-    + Increase minimum 2FA secret length to 26 (128bit);
+    + Increase minimum 2FA secret length to 32 (160bit);
+    + Disable /app/install/ helper scripts via config.php $disable_installer;
+    + LDAP user searches sent without ssl/tls;
 
 == 1.6.0
 
     Enhancements, changes:
     ----------------------------
-    + php8.4 compatibility;;
-    + MySQL 5.5.3+ is now required (support for utf8mb4);
+    + Partial php8.3 compatibility;
+    + MySQL 5.7.7+ is now required (support for utf8mb4);
 
     Security Fixes:
     ----------------------------

@@ -70,11 +70,11 @@ else {
 
 	# add test
 	if($POST->action=="add") {
-		$values['test'] = $User->Crypto->encrypt("test", $POST->secret);
+		$values['test'] = $User->Crypto->encrypt($User->Crypto->random_pseudo_bytes(32), $POST->secret);
 		$values['type'] = $POST->type;
 	}
 
 	# execute
-	if(!$Admin->object_modify("vaults", $POST->action, "id", $values)) 	{ $Result->show("danger",  _("Vault")." ".$POST->action." "._("error"), true); }
-	else 																	{ $Result->show("success", _("Vault")." ".$POST->action." "._("success"), true); }
+	if(!$Admin->object_modify("vaults", $POST->action, "id", $values)) 	{ $Result->show("danger",  _("Vault")." ".$User->get_post_action()." "._("error"), true); }
+	else 																	{ $Result->show("success", _("Vault")." ".$User->get_post_action()." "._("success"), true); }
 }

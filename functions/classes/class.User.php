@@ -189,7 +189,7 @@ class User extends Common_functions {
     private function register_session () {
         // not for api
         if ($this->api !== true) {
-            if (@$_SESSION===NULL && !isset($_SESSION)) {
+            if (!isset($_SESSION)) {
                 //set session name
                 $this->set_session_name();
                 //set default params
@@ -315,7 +315,7 @@ class User extends Common_functions {
     public function is_authenticated () {
         # if checked for subpages first check if $user is array
         if(!is_array($this->user)) {
-            if( !is_blank(@$_SESSION['ipamusername']) ) {
+            if(isset($_SESSION['ipamusername']) && !is_blank($_SESSION['ipamusername'])) {
                 # save username
                 $this->username = $_SESSION['ipamusername'];
                 # check for timeout
@@ -679,7 +679,7 @@ class User extends Common_functions {
                     $query = "select `su`.`id`, `su`.`id` as `subnetId`,`se`.`id` as `sectionId`, `subnet`, `mask`,`isFull`,`su`.`description`,`se`.`description` as `section`, `vlanId`, `isFolder`
                               from `subnets` as `su`, `sections` as `se` where `su`.`id` = ? and `su`.`sectionId` = `se`.`id` limit 1;";
 
-                    try { $fsubnet = $this->Database->getObjectQuery($query, array($id)); }
+                    try { $fsubnet = $this->Database->getObjectQuery('subnets', $query, array($id)); }
                     catch (Exception $e) {
                         $this->Result->show("danger", _("Error: ").$e->getMessage());
                         return false;
@@ -849,36 +849,31 @@ class User extends Common_functions {
      * @param bool $force
      * @return void
      */
-    public function fetch_user_details ($username, $force = false) {
+    public function fetch_user_details($username, $force = false) {
         # only if not already active
-        if(!is_object($this->user) || $force) {
+        if (!is_object($this->user) || $force) {
             try {
                 $user = $this->Database->findObject("users", "username", $username);
-            }
-            catch (Exception $e) {
-                $this->Result->show("danger", _("Error: ").$e->getMessage(), true);
+            } catch (Exception $e) {
+                $this->Result->show("danger", _("Error: ") . $e->getMessage(), true);
             }
 
-            # if not result return false
-            $usert = (array) $user;
+            if (!is_object($user)) {
+                $this->block_ip();
+                $this->log_failed_access($username);
+                $this->Log->write(_("User login"), _('Invalid username'), 2, $username);
+                $this->Result->show("danger", _("Invalid username or password"), true);
+            }
 
             # admin?
-            if($user->role == "Administrator") {
+            if ($user->role == "Administrator") {
                 $this->isadmin = true;
             }
 
-            if(sizeof($usert)==0) {
-                $this->block_ip ();
-                $this->log_failed_access ($username);
-                $this->Log->write ( _("User login"), _('Invalid username'), 2, $username );
-                $this->Result->show("danger", _("Invalid username or password"), true);
-            }
-            else {
-                $this->user = $user;
-            }
+            $this->user = $user;
 
             // register permissions
-            $this->register_user_module_permissions ();
+            $this->register_user_module_permissions();
         }
     }
 
@@ -1348,7 +1343,7 @@ class User extends Common_functions {
             $this->Result->show("danger", _("User account is disabled"), true);
         }
         // is passkey login enforced ?
-        elseif ($this->settings->{'passkeys'}=="1") {
+        elseif ($this->settings->dbversion >= 40 && $this->settings->{'passkeys'}=="1") {
             if ($this->user->passkey_only=="1") {
                 // check passkeys
                 $user_passkeys = $this->get_user_passkeys($this->user->id);
@@ -1674,47 +1669,51 @@ class User extends Common_functions {
      * User self update method
      *
      * @access public
-     * @param array|object $post //posted user details
+     * @param Params $post
      * @return bool
      */
-    public function self_update($post) {
+    public function self_update(Params $post): bool {
         # remove theme
-        if($post['theme'] == "default") { $post['theme'] = ""; }
+        if ($post->theme == "default") {
+            $post->theme = "";
+        }
         # set items to update
-        $items  = array("real_name"        => escape_input(strip_tags($post['real_name'])),
-                        "mailNotify"       => $post['mailNotify'] == "Yes" ? "Yes" : "No",
-                        "mailChangelog"    => $post['mailChangelog'] == "Yes" ? "Yes" : "No",
-                        "email"            => $this->validate_email($post['email']) ? escape_input($post['email']) : '',
-                        "lang"             => escape_input(strip_tags($post['lang'])),
-                        "id"               => $this->user->id,
-                        //display
-                        "compressOverride" => escape_input(strip_tags($post['compressOverride'])),
-                        "hideFreeRange"    => $this->verify_checkbox(@$post['hideFreeRange']),
-                        "menuType"         => $this->verify_checkbox(@$post['menuType']),
-                        "menuCompact"      => $this->verify_checkbox(@$post['menuCompact']),
-                        "theme"            => $post['theme'],
-                        "2fa"              => $this->verify_checkbox(@$post['2fa']),
-                        "passkey_only"     => $this->verify_checkbox(@$post['passkey_only']),
-                        );
-        if(!is_blank($post['password1'])) {
-        $items['password'] = $this->crypt_user_pass ($post['password1']);
+        $items  = [
+            "real_name"        => $post->real_name,
+            "mailNotify"       => $post->mailNotify == "Yes" ? "Yes" : "No",
+            "mailChangelog"    => $post->mailChangelog == "Yes" ? "Yes" : "No",
+            "email"            => $this->validate_email($post->email) ? $post->email : '',
+            "lang"             => $post->lang,
+            "id"               => $this->user->id,
+            //display
+            "compressOverride" => $post->compressOverride,
+            "hideFreeRange"    => $this->verify_checkbox($post->hideFreeRange),
+            "menuType"         => $this->verify_checkbox($post->menuType),
+            "menuCompact"      => $this->verify_checkbox($post->menuCompact),
+            "theme"            => $post->theme,
+            "2fa"              => $this->verify_checkbox($post->{'2fa'}),
+            "passkey_only"     => $this->verify_checkbox($post->passkey_only),
+        ];
+        if (!is_blank($post->password1)) {
+            $items['password'] = $this->crypt_user_pass($post->password1);
         }
 
         # prepare log file
-        $log = $this->array_to_log ($post);
+        $log = $this->array_to_log($post->as_array());
 
         # update
-        try { $this->Database->updateObject("users", $items); }
-        catch (Exception $e) {
-            $this->Result->show("danger", _("Error: ").$e->getMessage(), false);
-            $this->Log->write( _("User self update"), _("User self update failed")."!<br>".$log, 2 );
+        try {
+            $this->Database->updateObject("users", $items);
+        } catch (Exception $e) {
+            $this->Result->show("danger", _("Error: ") . $e->getMessage(), false);
+            $this->Log->write(_("User self update"), _("User self update failed") . "!<br>" . $log, 2);
             return false;
         }
         # update language
-        $this->update_session_language ();
+        $this->update_session_language();
 
         # ok, update log table
-        $this->Log->write( _("User self update"), _("User self update succeeded")."!", 0 );
+        $this->Log->write(_("User self update"), _("User self update succeeded") . "!", 0);
         return true;
     }
 
@@ -1795,19 +1794,21 @@ class User extends Common_functions {
      * @param none
      * @return int|false
      */
-    public function block_check_ip () {
+    public function block_check_ip() {
         # first purge
-        $this->purge_blocked_entries ();
-        $this->block_get_ip ();
+        $this->purge_blocked_entries();
+        $this->block_get_ip();
         # set date and query
-        $now = date("Y-m-d H:i:s", time() - 5*60);
-        $query = "select count from `loginAttempts` where `ip` = ? and `datetime` > ?;";
+        $query = "SELECT count FROM `loginAttempts` WHERE `ip` = ? AND `datetime` > DATE_SUB(NOW(), INTERVAL 5 MINUTE); ";
         # fetch
-        try { $cnt = $this->Database->getObjectQuery($query, array($this->ip, $now)); }
-        catch (Exception $e) { !$this->debugging ? : $this->Result->show("danger", $e->getMessage(), false); }
+        try {
+            $cnt = $this->Database->getObjectQuery('loginAttempts', $query, [$this->ip]);
+        } catch (Exception $e) {
+            !$this->debugging ?: $this->Result->show("danger", $e->getMessage(), false);
+        }
 
         # verify
-        return @$cnt->count>0 ? $cnt->count : false;
+        return (is_object($cnt) && $cnt->count) > 0 ? $cnt->count : false;
     }
 
     /**
@@ -1816,14 +1817,19 @@ class User extends Common_functions {
      * @access public
      * @return bool
      */
-    public function block_ip () {
+    public function block_ip() {
         # validate IP
-        if(!filter_var($this->ip, FILTER_VALIDATE_IP))    { return false; }
-
+        if (!filter_var($this->ip, FILTER_VALIDATE_IP)) {
+            return false;
+        }
         # first check if already in
-        if($this->block_check_ip ())         { $this->block_update_count(); }
+        if ($this->block_check_ip()) {
+            $this->block_update_count();
+        }
         # if not in add first entry
-        else                                 { $this->block_add_entry(); }
+        else {
+            $this->block_add_entry();
+        }
     }
 
     /**
@@ -1833,7 +1839,7 @@ class User extends Common_functions {
      * @access private
      * @return void
      */
-    private function block_get_ip () {
+    private function block_get_ip() {
         $this->ip = $this->get_user_ip();
     }
 
@@ -1843,13 +1849,14 @@ class User extends Common_functions {
      * @access private
      * @return void
      */
-    private function purge_blocked_entries () {
+    private function purge_blocked_entries() {
         # set date 5 min ago and query
-        $ago = date("Y-m-d H:i:s", time() - 5*60);
-        $query = "delete from `loginAttempts` where `datetime` < ?; ";
-
-        try { $this->Database->runQuery($query, array($ago)); }
-        catch (Exception $e) { !$this->debugging ? : $this->Result->show("danger", $e->getMessage(), false); }
+        $query = "DELETE FROM `loginAttempts` WHERE `datetime` < DATE_SUB(NOW(), INTERVAL 5 MINUTE); ";
+        try {
+            $this->Database->runQuery($query);
+        } catch (Exception $e) {
+            !$this->debugging ?: $this->Result->show("danger", $e->getMessage(), false);
+        }
     }
 
     /**
@@ -1860,9 +1867,12 @@ class User extends Common_functions {
      */
     private function block_update_count() {
         # query
-        $query = "update `loginAttempts` set `count`=`count`+1 where `ip` = ?; ";
-        try { $this->Database->runQuery($query, array($this->ip)); }
-        catch (Exception $e) { !$this->debugging ? : $this->Result->show("danger", $e->getMessage(), false); }
+        $query = "UPDATE `loginAttempts` SET `count`=`count`+1 WHERE `ip` = ?; ";
+        try {
+            $this->Database->runQuery($query, [$this->ip]);
+        } catch (Exception $e) {
+            !$this->debugging ?: $this->Result->show("danger", $e->getMessage(), false);
+        }
     }
 
     /**
@@ -1872,8 +1882,11 @@ class User extends Common_functions {
      * @return void
      */
     private function block_add_entry() {
-        try { $this->Database->insertObject("loginAttempts", array("ip"=>$this->ip, "count"=>1)); }
-        catch (Exception $e) { !$this->debugging ? : $this->Result->show("danger", $e->getMessage(), false); }
+        try {
+            $this->Database->insertObject("loginAttempts", ["ip" => $this->ip, "count" => 1]);
+        } catch (Exception $e) {
+            !$this->debugging ?: $this->Result->show("danger", $e->getMessage(), false);
+        }
     }
 
     /**
@@ -1883,8 +1896,11 @@ class User extends Common_functions {
      * @return void
      */
     private function block_remove_entry() {
-        try { $this->Database->deleteRow("loginAttempts", "ip", $this->ip); }
-        catch (Exception $e) { !$this->debugging ? : $this->Result->show("danger", $e->getMessage(), false); }
+        try {
+            $this->Database->deleteRow("loginAttempts", "ip", $this->ip);
+        } catch (Exception $e) {
+            !$this->debugging ?: $this->Result->show("danger", $e->getMessage(), false);
+        }
     }
 
     /**

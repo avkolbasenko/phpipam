@@ -28,12 +28,13 @@ class Params extends stdClass implements Countable {
     /**
      * Class constructor
      *
-     * @param array $args
+     * @param array|object $args
      * @param mixed $default
      * @param bool  $strip_tags
+     * @param bool  $html_escape
      */
-    public function __construct($args = [], $default = null, $strip_tags = false) {
-        $this->read($args, $strip_tags);
+    public function __construct($args = [], $default = null, $strip_tags = false, $html_escape = false) {
+        $this->read($args, $strip_tags, $html_escape);
         $this->____default = $default;
     }
 
@@ -84,13 +85,15 @@ class Params extends stdClass implements Countable {
     /**
      * Read array of arguments
      *
-     * @param array $args
-     * @param bool  $strip_tags
+     * @param array|object $args
+     * @param bool $strip_tags
+     * @param bool $html_escape
      * @return void
      */
-    public function read($args, $strip_tags = false) {
-        if (!is_array($args))
+    public function read($args, $strip_tags = false, $html_escape = false) {
+        if (!is_array($args) && !is_object($args)) {
             return;
+        }
 
         // Don't run strip_tags() on passwords and usernames
         // "<a>" can occur inside a valid password
@@ -110,11 +113,15 @@ class Params extends stdClass implements Countable {
         ];
 
         foreach ($args as $name => $value) {
-            if ($strip_tags && is_string($value) && !in_array($name, $strip_exceptions, true)) {
-                $this->{$name} = strip_tags($value);
-            } else {
-                $this->{$name} = $value;
+            if (is_string($value)) {
+                if ($strip_tags && !in_array($name, $strip_exceptions, true)) {
+                    $value = strip_tags($value);
+                }
+                if ($html_escape) {
+                    $value = htmlentities($value, ENT_QUOTES, 'UTF-8');
+                }
             }
+            $this->{$name} = $value;
         }
     }
 }

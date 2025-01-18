@@ -187,7 +187,7 @@ class Common_functions  {
 	 */
 	public function fetch_mysql_version () {
 		# fetch
-		try { $result = $this->Database->getObjectQuery("SELECT VERSION() AS 'version';"); }
+		try { $result = $this->Database->getObjectQuery("no_html_escape", "SELECT VERSION() AS 'version';"); }
 		catch (Exception $e) {
 			return "";
 		}
@@ -265,7 +265,7 @@ class Common_functions  {
 		# null method
 		$method = is_null($method) ? "id" : $this->Database->escape($method);
 
-		try { $res = $this->Database->getObjectQuery("SELECT * from `$table` where `$method` = ? limit 1;", array($value)); }
+		try { $res = $this->Database->getObjectQuery($table, "SELECT * from `$table` where `$method` = ? limit 1;", array($value)); }
 		catch (Exception $e) {
 			$this->Result->show("danger", _("Error: ").$e->getMessage());
 			return false;
@@ -366,7 +366,7 @@ class Common_functions  {
 
 		try {
 			$query = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?;";
-			$schema = $this->Database->getObjectsQuery($query, [$this->Database->dbname, $tableName]);
+			$schema = $this->Database->getObjectsQuery("no_html_escape", $query, [$this->Database->dbname, $tableName]);
 		} catch (\Exception $e) {
 			$this->Result->show("danger", _("Error: ").$e->getMessage());
 			return $results;
@@ -442,10 +442,6 @@ class Common_functions  {
 
 		if (!is_object($settings))
 			return false;
-
-		// Escape ' & " characters
-		if (property_exists($settings, 'siteTitle'))
-			$settings->siteTitle = escape_input($settings->siteTitle);
 
 		// default dbversion for older releases
 		if (!property_exists($settings, 'dbversion'))
@@ -775,19 +771,6 @@ class Common_functions  {
 	}
 
 	/**
-	 * Strip XSS on value print
-	 *
-	 * @method strip_xss
-	 *
-	 * @param  string $input
-	 *
-	 * @return string
-	 */
-	public function strip_xss ($input) {
-		return htmlspecialchars($input ?: '', ENT_QUOTES, 'UTF-8');
-	}
-
-	/**
 	 * Detect the encoding used for a string and convert to UTF-8
 	 *
 	 * @method convert_encoding_to_UTF8
@@ -985,11 +968,11 @@ class Common_functions  {
 			if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && !isset($_SERVER['HTTP_X_FORWARDED_PORT'])) {
 				return ($_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') ? 443 : 80;
 			}
-			if (isset($_SERVER['HTTP_X_FORWARDED_PORT'])) {
+			if (isset($_SERVER['HTTP_X_FORWARDED_PORT']) && is_numeric($_SERVER['HTTP_X_FORWARDED_PORT'])) {
 				return $_SERVER['HTTP_X_FORWARDED_PORT'];
 			}
 		}
-		if (isset($_SERVER['SERVER_PORT'])) {
+		if (isset($_SERVER['SERVER_PORT']) && is_numeric($_SERVER['SERVER_PORT'])) {
 			return $_SERVER['SERVER_PORT'];
 		}
 
@@ -1061,6 +1044,7 @@ class Common_functions  {
 			$url = "localhost";
 		}
 		$host = parse_url("$proto://$url", PHP_URL_HOST) ?: "localhost";
+		$host = urlencode($host);
 
 		$port = $this->httpPort();
 
@@ -1147,6 +1131,8 @@ class Common_functions  {
 
 			if (in_array($action, $valid_actions)) {
 				return escape_input(ucwords(_($action)));
+			} else {
+				return _('Invalid $_POST action');
 			}
 		}
 
@@ -1653,7 +1639,7 @@ class Common_functions  {
 
     	//field
     	if(!isset($object->{$field['name']}))	{ $html[] = ' <input type="text" class="'.$class.' form-control input-sm input-w-auto" data-format="'.$format.'" name="'. $field['nameNew'].$nameSuffix .'" maxlength="'.$size.'" rel="tooltip" data-placement="right" title="'.$field['Comment'].'" '.$disabled_text.'>'. "\n"; }
-    	else								    { $html[] = ' <input type="text" class="'.$class.' form-control input-sm input-w-auto" data-format="'.$format.'" name="'. $field['nameNew'].$nameSuffix .'" maxlength="'.$size.'" value="'. $this->strip_xss($object->{$field['name']}). '" rel="tooltip" data-placement="right" title="'.$field['Comment'].'" '.$disabled_text.'>'. "\n"; }
+    	else								    { $html[] = ' <input type="text" class="'.$class.' form-control input-sm input-w-auto" data-format="'.$format.'" name="'. $field['nameNew'].$nameSuffix .'" maxlength="'.$size.'" value="'. $object->{$field['name']}. '" rel="tooltip" data-placement="right" title="'.$field['Comment'].'" '.$disabled_text.'>'. "\n"; }
 
     	// result
 		return $html;
@@ -1724,7 +1710,7 @@ class Common_functions  {
             $maxlength = str_replace(array("int","(",")"),"", $field['type']);
         }
         // print
-		$html[] = ' <input type="text" class="form-control input-sm" name="'. $field['nameNew'].$nameSuffix .'" placeholder="'. $this->print_custom_field_name ($field['name']) .'" value="'. $this->strip_xss($object->{$field['name']}). '" size="30" rel="tooltip" data-placement="right" maxlength="'.$maxlength.'" title="'.$field['Comment'].'" '.$disabled_text.'>'. "\n";
+		$html[] = ' <input type="text" class="form-control input-sm" name="'. $field['nameNew'].$nameSuffix .'" placeholder="'. $this->print_custom_field_name ($field['name']) .'" value="'. $object->{$field['name']}. '" size="30" rel="tooltip" data-placement="right" maxlength="'.$maxlength.'" title="'.$field['Comment'].'" '.$disabled_text.'>'. "\n";
     	// result
     	return $html;
 	}
@@ -2354,6 +2340,20 @@ class Common_functions  {
 	    return implode("\n", $html);
 	}
 
+	/**
+	 * Composer auto-load error-handler.
+	 *
+	 * @param int $errno
+	 * @param string $errstr
+	 * @param string $errfile
+	 * @param int $errline
+	 * @return bool
+	 */
+	static function composer_autoload_error_handler($errno, $errstr, $errfile, $errline) {
+		$Result = new Result();
+		$Result->show($errno >128 ? 'danger' : 'warning', "<h5>" . escape_input($errfile) . ":" . escape_input($errline) . "</h5>" . escape_input($errstr));
+		return true;
+	}
 
 	/**
 	 * Composer check
@@ -2371,8 +2371,11 @@ class Common_functions  {
         	return true;
         }
 
-        // autoload composer files
+        // autoload composer files - catch and display errors.
+		$old_handler = set_error_handler("Common_functions::composer_autoload_error_handler", E_ALL);
         require __DIR__ . '/../vendor/autoload.php';
+		set_error_handler($old_handler, E_ALL);
+
         // check if composer is installed
         if (!class_exists('\Composer\InstalledVersions')) {
         	$this->composer_err = _("Composer is not installed")."!<hr>"._("Please install composer and composer modules ( cd functions && composer install ).");

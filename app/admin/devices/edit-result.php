@@ -50,7 +50,7 @@ $POST->sections = !empty($temp) ? implode(";", $temp) : null;
 if($POST->hostname == "") 											{ $Result->show("danger", _('Hostname is mandatory').'!', true); }
 
 # rack checks
-if (!is_blank($POST->rack) && $User->get_module_permissions ("racks")>=User::ACCESS_R) {
+if ($POST->rack !== "0" && $User->get_module_permissions ("racks")>=User::ACCESS_R) {
     if ($User->settings->enableRACK!="1") {
         unset($POST->rack);
     }
@@ -58,36 +58,15 @@ if (!is_blank($POST->rack) && $User->get_module_permissions ("racks")>=User::ACC
         # validate position and size
         if (!is_numeric($POST->rack))                               { $Result->show("danger", _('Invalid rack identifier').'!', true); }
         if (!is_numeric($POST->rack_start))                         { $Result->show("danger", _('Invalid rack start position').'!', true); }
-        if ($POST->rack_size == 0)                         { $Result->show("danger", _('Invalid rack size').'!', true); }
+        if ($POST->rack_size == 0) {
+			if ($POST->rack!=0) { $Result->show("danger", _('Invalid rack size').'!', true); }
+		}
 		# validate rack
 		$rack = $Racks->fetch_rack_details($POST->rack);
 		if (!is_numeric($POST->rack) || ($rack > 0 && !is_object($rack))) {
 			$Result->show("danger", _('Rack does not exist') . '!', true);
 		}
     }
-}
-
-# fetch custom fields
-$custom = $Tools->fetch_custom_fields('devices');
-if(sizeof($custom) > 0) {
-	foreach($custom as $myField) {
-
-		//replace possible ___ back to spaces
-		$myField['nameTest'] = str_replace(" ", "___", $myField['name']);
-		if(isset($POST->{$myField['nameTest']})) { $POST->{$myField['name']} = $POST->{$myField['nameTest']};}
-
-		//booleans can be only 0 and 1!
-		if($myField['type']=="tinyint(1)") {
-			if($POST->{$myField['name']}>1) {
-				$POST->{$myField['name']} = 0;
-			}
-		}
-		//not null!
-		if($myField['Null']=="NO" && is_blank($POST->{$myField['name']})) { $Result->show("danger", $myField['name']." "._("can not be empty!"), true); }
-
-		# save to update array
-		$update[$myField['name']] = $POST->{$myField['nameTest']};
-	}
 }
 
 # set update values
@@ -100,10 +79,11 @@ $values = array(
 				"sections"    =>$POST->sections,
 				"location"    =>$POST->location
 				);
-# custom fields
-if(isset($update)) {
-	$values = array_merge($values, $update);
-}
+
+# fetch custom fields
+$update = $Tools->update_POST_custom_fields('devices', $POST->action, $POST);
+$values = array_merge($values, $update);
+
 # rack
 if (!is_blank($POST->rack) && $User->get_module_permissions ("racks")>=User::ACCESS_R) {
 	$values['rack']       = $POST->rack;
@@ -117,7 +97,7 @@ if ($User->get_module_permissions ("locations")==User::ACCESS_NONE) {
 
 # update device
 if ($Admin->object_modify("devices", $POST->action, "id", $values)) {
-	$Result->show("success", _("Device") . " " . $POST->action . " " . _("successful") . '!', false);
+	$Result->show("success", _("Device") . " " . $User->get_post_action() . " " . _("successful") . '!', false);
 }
 
 if($POST->action=="delete"){

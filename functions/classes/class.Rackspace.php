@@ -132,7 +132,7 @@ class phpipam_rack extends Tools {
     public function fetch_all_racks ($locations = false) {
         // set query and fetch racks
         $query = $locations ? "select * from `racks` order by `location` asc, `name` asc;" : "select * from `racks` order by `name` asc;";
-        $all_racks = $this->Database->getObjectsQuery($query);
+        $all_racks = $this->Database->getObjectsQuery('racks', $query);
         // reorder
         if ($all_racks==false) {
             $this->all_racks = false;
@@ -220,7 +220,7 @@ class phpipam_rack extends Tools {
      * @return array
      */
     public function free_u($rack, $rack_devices, $rack_contents, $current_device = null) {
-        $current_device      = (object) $current_device;
+        $current_device      = new Params($current_device);
         $current_device_size = isset($current_device->rack_size) ? $current_device->rack_size-1 : 0;
 
         // available spaces

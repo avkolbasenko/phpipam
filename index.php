@@ -116,6 +116,7 @@ else {
 		<?php } ?>
 		<script src="js/magic.js?v=<?php print SCRIPT_PREFIX; ?>"></script>
 		<script src="js/bootstrap.min.js?v=<?php print SCRIPT_PREFIX; ?>"></script>
+		<script src="js/bootstrap.custom.js?v=<?php print SCRIPT_PREFIX; ?>"></script>
 		<script src="js/bootstrap-switch.min.js?v=<?php print SCRIPT_PREFIX; ?>"></script>
 
 		<!-- bootstrap table -->
@@ -132,7 +133,7 @@ else {
 		<script src="js/leaflet.fullscreen.min.js"></script>
 		<?php }	?>
 		<!-- jQuery UI -->
-		<script src="js/jquery-ui-1.12.1.custom.min.js?v=<?php print SCRIPT_PREFIX; ?>"></script>
+		<script src="js/jquery-ui.min.js?v=<?php print SCRIPT_PREFIX; ?>"></script>
 
 		<?php if(defined('IS_DEMO')) { ?>
         <!-- GA -->

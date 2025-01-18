@@ -37,9 +37,10 @@ $csize = sizeof($custom_fields) - sizeof($hidden_fields);
 $filter = false;
 
 // reindex types
+$device_types_indexed = [];
 if (isset($device_types)) {
 	foreach($device_types as $dt) {
-		$device_types_indexed[$dt->tid] = $dt;
+		$device_types_indexed[$dt->tid] = $dt->tname;
 	}
 }
 
@@ -156,7 +157,7 @@ else {
 			print "</td>";
 		}
 		print '	<td><span class="badge badge1 badge5">'. $cnt .'</span> '._('Objects').'</td>'. "\n";
-		print '	<td class="hidden-sm">'. $device_types_indexed[$device['type']]->tname .'</td>'. "\n";
+		print '	<td class="hidden-sm">'. (isset($device_types_indexed[$device['type']]) ? $device_types_indexed[$device['type']] : '') .'</td>'. "\n";
 
         //custom fields - no subnets
         if(sizeof(@$custom_fields) > 0) {
@@ -184,7 +185,7 @@ else {
             }
 			if($User->settings->enableSNMP=="1" && $User->is_admin(false)) {
 	            $links[] = ["type"=>"header", "text"=>_("SNMP")];
-	            $links[] = ["type"=>"link", "text"=>_("Manage SNMP"), "href"=>"", "class"=>"open_popup", "dataparams"=>"  data-script='app/admin/devices/edit-snmp.php' data-class='500' data-action='edit' data-switchId='$device[id]''", "icon"=>"cogs"];
+	            $links[] = ["type"=>"link", "text"=>_("Manage SNMP"), "href"=>"", "class"=>"open_popup", "dataparams"=>"  data-script='app/admin/devices/edit-snmp.php' data-class='500' data-action='edit' data-switchId='$device[id]'", "icon"=>"cogs"];
 			}
             // print links
             print $User->print_actions($User->user->compress_actions, $links);
